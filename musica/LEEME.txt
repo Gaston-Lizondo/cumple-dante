@@ -1,0 +1,8 @@
+Subí acá tus canciones en formato .mp3
+
+Después agregalas en index.html, dentro de CONFIG:
+
+  canciones: ["musica/cancion1.mp3", "musica/cancion2.mp3"],
+  musicaJuego: "musica/juego.mp3",   (opcional, suena solo en el juego)
+
+Si la lista queda vacía [], suena la música incluida.

@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c8102e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%95%B7%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<title>¡Dante cumple 3! 🕷️</title>
+<meta name="description" content="Sábado 14 de noviembre · 20 hs · Tocá para abrir tu invitación">
+
+<!-- Vista previa al compartir (WhatsApp, Facebook, etc.). Si cambia la URL del sitio, actualizar acá. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="¡Dante cumple 3! 🕷️">
+<meta property="og:description" content="Sábado 14 de noviembre · 20 hs · Tocá para abrir tu invitación">
+<meta property="og:url" content="https://gaston-lizondo.github.io/cumple-dante/">
+<meta property="og:image" content="https://gaston-lizondo.github.io/cumple-dante/preview.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+
+<script>
+/* =====================================================================
+   CONFIGURACIÓN — todo lo editable está acá
+   ===================================================================== */
+const CONFIG = {
+  nombre: "Dante",
+  edad: 3,
+
+  // Fecha y hora de inicio (con zona horaria de Argentina: -03:00)
+  fecha: "2026-11-14T20:00:00-03:00",
+  fechaTexto: { dia: "Sábado", numero: "14", mes: "Noviembre", hora: "20 hs" },
+
+  direccion: "Colonia 2463, Isidro Casanova",
+  direccionCompleta: "Colonia 2463, B1765JTM Isidro Casanova, Provincia de Buenos Aires",
+  mapsLink: "https://maps.app.goo.gl/Ef4YwsuiB4pcLAtk7",
+
+  mision: [
+    "🎂 Torta de cumple",
+    "🎉 Mucha diversión",
+    "🦸 Una aventura de superhéroes",
+    "🍕 Pizza party"
+  ],
+
+  // IMÁGENES DEL PERSONAJE
+  // principal: la que se usa en todos lados (PNG con fondo transparente).
+  // colgado:   opcional. Si queda vacío, se usa la principal dada vuelta.
+  // juego:     opcional. Si queda vacío, se usa la principal.
+  imagenes: {
+    principal: "personaje.png",
+    colgado: "",
+    juego: "",
+    festejo: ""   // opcional: imagen para la pantalla final (si queda vacía, se usa la principal)
+  },
+
+  // MÚSICA
+  // Dejá la lista vacía [] para usar la música incluida.
+  // Para usar tus canciones: subí los mp3 a la carpeta "musica" y agregalos acá, por ejemplo:
+  // canciones: ["musica/cancion1.mp3", "musica/cancion2.mp3"],
+  canciones: [],
+  // Canción especial para el juego (opcional). Ej: "musica/juego.mp3"
+  musicaJuego: "",
+  volumenMusica: 0.5,   // de 0 a 1
+  volumenEfectos: 0.8,  // de 0 a 1
+
+  // RANKING ONLINE: pegá acá la URL de la aplicación web de Apps Script (termina en /exec).
+  // Si queda vacía, el juego funciona igual pero sin ranking.
+  rankingUrl: "",
+
+  // Dirección pública del sitio (para el botón de compartir)
+  urlSitio: "https://gaston-lizondo.github.io/cumple-dante/",
+  mensajeWhatsApp: "🕷️ ¡Dante cumple 3! Te espero el sábado 14/11 a las 20 hs para una aventura de superhéroes. Abrí tu invitación acá 👉"
+};
+</script>
+
+<style>
+:root{
+  --rojo:#d0112b; --rojo-osc:#8f0a1d; --azul:#1f4fd1; --azul-osc:#12307f;
+  --tinta:#141a2e; --crema:#fffaf0; --cielo1:#bfe0ff; --cielo2:#f3f9ff;
+  --plata:#e9edf2;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--rojo-osc);font-family:'Fredoka',system-ui,sans-serif;color:var(--tinta)}
+button{font-family:inherit;cursor:pointer;border:none}
+.comic{font-family:'Bangers','Impact',sans-serif;letter-spacing:.04em}
+
+/* ---------- Pantallas ---------- */
+.screen{position:fixed;inset:0;opacity:0;visibility:hidden;transition:opacity .7s ease,visibility 0s linear .7s,transform .7s ease;transform:scale(1.04)}
+.screen.active{opacity:1;visibility:visible;transition:opacity .7s ease,visibility 0s,transform .7s ease;transform:none}
+.scroll{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+
+/* ---------- Fondo traje (pantalla 1) ---------- */
+.traje{background:
+  radial-gradient(circle at 50% 45%, #e8203c 0%, #c10f28 45%, #7d0718 100%);}
+.traje::before{content:"";position:absolute;inset:0;
+  background-image:radial-gradient(rgba(0,0,0,.28) 1.1px, transparent 1.6px);
+  background-size:7px 7px;pointer-events:none}
+.web-bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+
+/* ---------- Sobre ---------- */
+#s1{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.s1-top{position:relative;z-index:2;color:#fff;text-align:center;margin-bottom:28px;text-shadow:3px 3px 0 var(--tinta)}
+.s1-top .comic{font-size:clamp(30px,8vw,46px);-webkit-text-stroke:1.5px var(--tinta)}
+.s1-top p{font-weight:600;font-size:17px;opacity:.95}
+.envelope{position:relative;z-index:2;width:min(82vw,360px);aspect-ratio:1.48;cursor:pointer;filter:drop-shadow(0 18px 24px rgba(0,0,0,.45));animation:flotar 3s ease-in-out infinite}
+.envelope.abierto{animation:none}
+@keyframes flotar{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-10px) rotate(1deg)}}
+.env-back{position:absolute;inset:0;background:#efe6d2;border-radius:6px}
+.letter{position:absolute;left:6%;right:6%;top:8%;height:86%;background:var(--crema);border-radius:6px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform 1s cubic-bezier(.2,.9,.3,1.2) .55s;z-index:1;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);border:3px solid var(--rojo)}
+.letter .comic{font-size:clamp(34px,10vw,52px);color:var(--rojo);-webkit-text-stroke:1.5px var(--tinta);line-height:1}
+.letter small{font-weight:700;color:var(--azul)}
+.env-front{position:absolute;inset:0;z-index:2;border-radius:6px;
+  background:linear-gradient(160deg,#fbf6ea,#eadfc6);
+  clip-path:polygon(0 0,50% 58%,100% 0,100% 100%,0 100%)}
+.env-front::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(to top right, transparent 49.6%, rgba(0,0,0,.08) 50%, transparent 50.6%),
+  linear-gradient(to top left, transparent 49.6%, rgba(0,0,0,.08) 50%, transparent 50.6%)}
+.env-flap{position:absolute;left:0;right:0;top:0;height:62%;z-index:3;transform-origin:top center;
+  transition:transform .6s ease .15s,z-index 0s linear .45s}
+.env-flap::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#f7f0df,#e3d6b8);
+  clip-path:polygon(0 0,100% 0,50% 100%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.2))}
+.seal{position:absolute;left:50%;top:100%;width:78px;height:78px;transform:translate(-50%,-62%);border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ff5a6c,#c4102a 45%,#7e0617 100%);
+  box-shadow:0 3px 6px rgba(0,0,0,.4), inset 0 0 0 5px rgba(0,0,0,.18), inset 0 0 0 9px rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:center;transition:transform .35s ease, opacity .35s ease;z-index:4}
+.seal svg{width:44px;height:44px}
+.tap-label{position:absolute;left:50%;bottom:-62px;transform:translateX(-50%);white-space:nowrap;z-index:5;
+  background:#fff;color:var(--tinta);font-weight:700;font-size:18px;padding:8px 18px;border-radius:999px;
+  border:3px solid var(--tinta);box-shadow:4px 4px 0 var(--tinta);animation:latido 1.4s ease-in-out infinite}
+@keyframes latido{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.07)}}
+.envelope.abierto .seal{transform:translate(-50%,-62%) scale(1.5) rotate(25deg);opacity:0}
+.envelope.abierto .env-flap{transform:rotateX(180deg);z-index:0}
+.envelope.abierto .letter{transform:translateY(-58%)}
+.envelope.abierto .tap-label{opacity:0;transition:opacity .2s}
+
+/* ---------- Ciudad / cielo ---------- */
+.cielo{background:linear-gradient(180deg,var(--cielo1) 0%,var(--cielo2) 60%,#fff 100%)}
+.skyline{position:fixed;left:0;right:0;bottom:0;height:45vh;width:100%;pointer-events:none;z-index:0}
+.corner-web{position:fixed;width:180px;height:180px;pointer-events:none;z-index:1;opacity:.85}
+.corner-web.tl{top:0;left:0}
+.corner-web.tr{top:0;right:0;transform:scaleX(-1)}
+
+/* ---------- Pantalla 2: detalles ---------- */
+.wrap{position:relative;z-index:2;max-width:480px;margin:0 auto;padding:64px 18px 60px}
+.header{position:relative;min-height:330px}
+.header .invito{font-weight:700;color:var(--azul-osc);font-size:19px;transform:rotate(-4deg);display:inline-block;margin-top:12px}
+.nombre{font-size:clamp(64px,19vw,92px);color:var(--rojo);line-height:.95;-webkit-text-stroke:2.5px var(--tinta);
+  text-shadow:5px 5px 0 var(--azul);margin-top:6px}
+.cumple-txt{font-weight:700;font-size:22px;margin-top:4px}
+.numero{font-size:clamp(150px,44vw,200px);line-height:.85;color:var(--rojo);-webkit-text-stroke:4px var(--tinta);
+  text-shadow:8px 8px 0 var(--azul),8px 8px 0 var(--tinta);display:inline-block;transform-origin:center bottom}
+.pop{animation:pop .9s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes pop{0%{transform:scale(0) rotate(-20deg)}100%{transform:scale(1) rotate(-6deg)}}
+.hang{position:absolute;right:4%;top:-64px;width:42%;max-width:170px;transform-origin:50% 0;animation:swing 3.2s ease-in-out infinite;z-index:3}
+@keyframes swing{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-7deg)}}
+.hang .thread{width:3px;height:96px;margin:0 auto;background:linear-gradient(90deg,#9aa4b2,#fff,#9aa4b2)}
+.hang img{display:block;width:100%;height:auto;filter:drop-shadow(0 8px 8px rgba(0,0,0,.25))}
+.hang img.invertida{transform:rotate(180deg)}
+
+.fecha{display:flex;align-items:center;justify-content:center;gap:12px;margin:18px 0 6px;font-weight:700;font-size:20px}
+.fecha .linea{flex:1;height:3px;background:var(--tinta);border-radius:2px}
+.fecha .num{font-family:'Bangers';font-size:44px;color:var(--rojo);-webkit-text-stroke:1.5px var(--tinta);line-height:1}
+.hora{text-align:center;font-family:'Bangers';font-size:34px;color:var(--azul);-webkit-text-stroke:1px var(--tinta);letter-spacing:.06em}
+
+.mision{position:relative;margin:26px auto 8px;width:min(86vw,330px);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#ee2440,#b40d25 70%,#7d0718);border:4px solid var(--tinta);
+  box-shadow:6px 6px 0 var(--azul);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;transform:rotate(-4deg)}
+.mision .web-bg{opacity:.55}
+.mision h3{position:relative;font-size:clamp(34px,10vw,44px);color:#fff;-webkit-text-stroke:1.5px var(--tinta);text-shadow:3px 3px 0 var(--tinta)}
+.mision ul{position:relative;list-style:none;text-align:center;color:#fff;font-weight:700;font-size:clamp(15px,4.4vw,18px);line-height:1.55;text-shadow:2px 2px 0 var(--tinta)}
+
+.titulo-seccion{font-family:'Bangers';font-size:30px;text-align:center;color:var(--tinta);margin:30px 0 10px;letter-spacing:.05em}
+.countdown{display:flex;justify-content:center;gap:10px}
+.cd{background:#fff;border:3px solid var(--tinta);border-radius:12px;box-shadow:4px 4px 0 var(--tinta);min-width:68px;padding:8px 6px 6px;text-align:center}
+.cd b{display:block;font-family:'Bangers';font-size:38px;color:var(--rojo);line-height:1}
+.cd span{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--azul-osc)}
+.cd-msg{text-align:center;font-family:'Bangers';font-size:34px;color:var(--rojo);-webkit-text-stroke:1px var(--tinta)}
+
+.lugar{background:#fff;border:3px solid var(--tinta);border-radius:16px;box-shadow:5px 5px 0 var(--tinta);padding:14px;margin-top:8px}
+.lugar .dir{font-weight:700;font-size:18px;text-align:center;margin-bottom:10px}
+.lugar iframe{width:100%;height:200px;border:0;border-radius:10px;display:block;background:#dfe8f3}
+.botones{display:grid;gap:12px;margin-top:16px}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px 18px;border-radius:14px;
+  font-weight:700;font-size:18px;color:#fff;background:var(--rojo);border:3px solid var(--tinta);box-shadow:4px 4px 0 var(--tinta);
+  text-decoration:none;transition:transform .08s, box-shadow .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--tinta)}
+.btn.azul{background:var(--azul)}
+.btn.blanco{background:#fff;color:var(--tinta)}
+.btn.verde{background:#25d366;color:#08311a}
+.btn.grande{font-family:'Bangers';font-size:clamp(20px,6.2vw,28px);letter-spacing:.05em;padding:16px 12px;white-space:nowrap}
+.link-sutil{display:block;text-align:center;margin-top:14px;color:var(--azul-osc);font-weight:600;text-decoration:underline;background:none;font-size:16px;width:100%}
+
+/* ---------- Botón de sonido ---------- */
+#sonido{position:fixed;top:max(12px,env(safe-area-inset-top));right:12px;z-index:50;width:48px;height:48px;border-radius:50%;
+  background:#fff;border:3px solid var(--tinta);box-shadow:3px 3px 0 var(--tinta);font-size:22px;display:none;align-items:center;justify-content:center}
+#sonido.visible{display:flex}
+
+/* ---------- Juego ---------- */
+#s3{background:#bfe0ff;touch-action:none;user-select:none;-webkit-user-select:none}
+#juego{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.hud{position:absolute;top:max(12px,env(safe-area-inset-top));left:12px;z-index:5;display:flex;gap:8px;pointer-events:none}
+.hud div{background:#fff;border:3px solid var(--tinta);border-radius:12px;padding:4px 12px;font-family:'Bangers';font-size:24px;letter-spacing:.05em;box-shadow:3px 3px 0 var(--tinta)}
+.pista{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);z-index:5;background:rgba(20,26,46,.82);color:#fff;
+  font-weight:700;padding:10px 18px;border-radius:999px;font-size:17px;pointer-events:none;white-space:nowrap;transition:opacity .5s}
+.overlay{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:rgba(20,26,46,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.overlay.oculto{display:none}
+.panel{width:min(92vw,400px);background:var(--crema);border:4px solid var(--tinta);border-radius:20px;box-shadow:7px 7px 0 var(--tinta);padding:22px 18px;text-align:center;position:relative;overflow:hidden}
+.panel h2{font-family:'Bangers';font-size:clamp(34px,10vw,44px);color:var(--rojo);-webkit-text-stroke:1.5px var(--tinta);line-height:1;letter-spacing:.04em}
+.panel p{font-weight:600;margin:10px 0 14px;font-size:16px}
+.panel img.mini{width:96px;height:96px;object-fit:contain;margin:-6px auto 4px;display:block}
+.modos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.modos .btn{flex-direction:column;gap:2px;font-size:20px;padding:12px 8px}
+.modos .btn small{font-size:12px;font-weight:600;opacity:.95}
+.record{font-weight:700;color:var(--azul-osc);margin-top:12px;font-size:15px}
+.puntaje{font-family:'Bangers';font-size:64px;color:var(--azul);-webkit-text-stroke:1.5px var(--tinta);line-height:1;margin:6px 0}
+.nuevo-record{display:inline-block;background:#ffd400;border:3px solid var(--tinta);border-radius:999px;padding:4px 14px;font-weight:700;transform:rotate(-3deg);margin-bottom:8px;animation:latido2 .8s ease-in-out infinite}
+@keyframes latido2{50%{transform:rotate(-3deg) scale(1.08)}}
+.panel .botones{margin-top:10px}
+.panel{max-height:calc(100vh - 30px);max-height:calc(100dvh - 30px);overflow-y:auto}
+.btn.amarillo{background:#ffd400;color:var(--tinta)}
+.rk{margin-top:14px;text-align:left}
+.rk-titulo{font-family:'Bangers';font-size:26px;text-align:center;color:var(--tinta);letter-spacing:.05em}
+.rk-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 8px}
+.rk-tab{padding:8px;border-radius:10px;border:3px solid var(--tinta);background:#fff;font-weight:700;font-size:15px;color:var(--tinta)}
+.rk-tab.on{background:var(--azul);color:#fff}
+.rk-lista{list-style:none;border:3px solid var(--tinta);border-radius:12px;overflow:hidden;background:#fff}
+.rk-lista li{display:flex;align-items:center;gap:10px;padding:7px 12px;font-weight:600;border-top:1px solid #e3e7ef}
+.rk-lista li:first-child{border-top:none}
+.rk-lista li.yo{background:#fff4b8}
+.rk-pos{width:30px;text-align:center;font-weight:700;color:var(--azul-osc)}
+.rk-nom{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk-pts{font-family:'Bangers';font-size:22px;color:var(--rojo);letter-spacing:.04em}
+.rk-vacio{text-align:center;font-weight:600;padding:10px;color:var(--azul-osc)}
+.rk-form{display:grid;gap:10px}
+.rk-form input{width:100%;padding:13px 14px;border-radius:12px;border:3px solid var(--tinta);font:600 18px 'Fredoka',sans-serif;text-align:center;outline:none}
+.rk-form input:focus{box-shadow:0 0 0 3px #ffd400}
+.rk-msg{text-align:center;font-weight:700;margin:8px 0;color:var(--azul-osc)}
+
+/* ---------- Pantalla 4: cierre ---------- */
+#s4 .wrap{text-align:center;padding-top:76px}
+.cierre-titulo{font-size:clamp(48px,14vw,68px);color:var(--rojo);-webkit-text-stroke:2px var(--tinta);text-shadow:5px 5px 0 var(--azul);line-height:1}
+.heroe-final{width:min(60vw,240px);margin:18px auto 6px;display:block;animation:saltito 2.2s ease-in-out infinite;filter:drop-shadow(0 12px 10px rgba(0,0,0,.25))}
+@keyframes saltito{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+.countdown.grande .cd{min-width:76px;padding:12px 6px 8px}
+.countdown.grande .cd b{font-size:50px}
+.datos-mini{font-weight:700;margin:16px 0 4px;font-size:17px}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(30px);opacity:0;background:var(--tinta);color:#fff;padding:10px 18px;border-radius:999px;font-weight:600;z-index:60;transition:.3s}
+.toast.on{opacity:1;transform:translateX(-50%)}
+
+@media (min-width:700px){
+  .corner-web{width:260px;height:260px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<button id="sonido" aria-label="Sonido">🔊</button>
+
+<!-- ===================== PANTALLA 1: SOBRE ===================== -->
+<section id="s1" class="screen active traje">
+  <svg class="web-bg" id="web1" preserveAspectRatio="xMidYMid slice"></svg>
+  <div class="s1-top">
+    <div class="comic">¡Tenés una invitación!</div>
+    <p>Misión ultra secreta 🕷️</p>
+  </div>
+  <div class="envelope" id="sobre" role="button" aria-label="Abrir invitación">
+    <div class="env-back"></div>
+    <div class="letter">
+      <small>¡ATENCIÓN, HÉROE!</small>
+      <div class="comic" id="cartaNombre">DANTE</div>
+      <small>cumple <span id="cartaEdad">3</span></small>
+    </div>
+    <div class="env-front"></div>
+    <div class="env-flap">
+      <div class="seal">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <g stroke="#3a0009" stroke-width="3" stroke-linecap="round" fill="none">
+            <path d="M28 26 L18 14 L10 16"/><path d="M36 26 L46 14 L54 16"/>
+            <path d="M27 31 L14 26 L6 30"/><path d="M37 31 L50 26 L58 30"/>
+            <path d="M27 36 L14 40 L8 48"/><path d="M37 36 L50 40 L56 48"/>
+            <path d="M28 40 L20 50 L18 58"/><path d="M36 40 L44 50 L46 58"/>
+          </g>
+          <ellipse cx="32" cy="27" rx="6" ry="6.5" fill="#3a0009"/>
+          <ellipse cx="32" cy="40" rx="7.5" ry="10" fill="#3a0009"/>
+        </svg>
+      </div>
+    </div>
+    <div class="tap-label">Tocá para abrir…</div>
+  </div>
+</section>
+
+<!-- ===================== PANTALLA 2: DETALLES ===================== -->
+<section id="s2" class="screen cielo scroll">
+  <svg class="skyline" id="sky2" preserveAspectRatio="xMidYMax slice"></svg>
+  <svg class="corner-web tl" id="cw1"></svg>
+  <svg class="corner-web tr" id="cw2"></svg>
+  <div class="wrap">
+    <div class="header">
+      <span class="invito">¡Te invito a celebrar!</span>
+      <div class="nombre comic" id="txtNombre">DANTE</div>
+      <div class="cumple-txt">cumple</div>
+      <div class="numero comic" id="txtEdad">3</div>
+      <div class="hang">
+        <div class="thread"></div>
+        <img id="imgColgado" alt="">
+      </div>
+    </div>
+
+    <div class="fecha">
+      <span class="linea"></span>
+      <span id="fDia">Sábado</span>
+      <span class="num" id="fNum">14</span>
+      <span id="fMes">Noviembre</span>
+      <span class="linea"></span>
+    </div>
+    <div class="hora" id="fHora">20 HS</div>
+
+    <div class="mision">
+      <svg class="web-bg" id="webMision" viewBox="0 0 300 300"></svg>
+      <h3 class="comic">¡TU MISIÓN!</h3>
+      <ul id="listaMision"></ul>
+    </div>
+
+    <div class="titulo-seccion">⏱ FALTAN</div>
+    <div class="countdown" id="cd1"></div>
+
+    <div class="titulo-seccion">📍 BASE SECRETA</div>
+    <div class="lugar">
+      <div class="dir" id="txtDir"></div>
+      <iframe id="mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa"></iframe>
+      <div class="botones">
+        <a class="btn azul" id="btnMaps" target="_blank" rel="noopener">📍 Cómo llegar</a>
+        <a class="btn" id="btnGCal" target="_blank" rel="noopener">📅 Agendar en Google Calendar</a>
+        <button class="btn blanco" id="btnIcs">🍎 Agendar en iPhone / Outlook</button>
+      </div>
+    </div>
+
+    <div class="botones" style="margin-top:28px">
+      <button class="btn grande azul" data-ir="s3">🕸️ ¡Jugá al juego! →</button>
+    </div>
+    <button class="link-sutil" data-ir="s4">Saltar al final</button>
+  </div>
+</section>
+
+<!-- ===================== PANTALLA 3: JUEGO ===================== -->
+<section id="s3" class="screen">
+  <canvas id="juego"></canvas>
+  <div class="hud" id="hud" style="display:none">
+    <div id="hudMetros">0 m</div>
+    <div id="hudGlobos">🎈 0</div>
+    <div id="hudVidas"></div>
+    <div id="hudTiempo" style="display:none"></div>
+  </div>
+  <div class="pista" id="pista">👆 Mantené apretado para lanzar la telaraña</div>
+
+  <div class="overlay" id="menuJuego">
+    <div class="panel">
+      <img class="mini" id="imgMenu" alt="">
+      <h2>BALANCEO POR LA CIUDAD</h2>
+      <p>Mantené apretada la pantalla para engancharte con la telaraña y soltá para salir volando. ¡No toques la calle! Agarrá los globos 🎈 para sumar puntos.</p>
+      <div class="modos">
+        <button class="btn azul" data-modo="facil">🧒 Fácil<small>para los más chicos</small></button>
+        <button class="btn" data-modo="normal">🦸 Normal<small>para héroes grandes</small></button>
+      </div>
+      <div class="record" id="recordsTxt"></div>
+      <div id="rkMenu" class="rk" style="display:none">
+        <div class="rk-titulo">🏆 RANKING</div>
+        <div class="rk-tabs">
+          <button class="rk-tab on" data-tab="facil">Fácil</button>
+          <button class="rk-tab" data-tab="normal">Normal</button>
+        </div>
+        <div id="rkMenuLista"></div>
+      </div>
+      <button class="link-sutil" data-ir="s4">Saltar juego →</button>
+      <button class="link-sutil" data-ir="s2" style="margin-top:4px">← Volver a la invitación</button>
+    </div>
+  </div>
+
+  <div class="overlay oculto" id="finJuego">
+    <div class="panel">
+      <h2 id="finTitulo">¡UY, TE CAÍSTE!</h2>
+      <div class="puntaje" id="finPuntos">0</div>
+      <div id="finNuevo"></div>
+      <div class="record" id="finRecord"></div>
+      <div id="rkGuardar" class="rk" style="display:none">
+        <div id="rkForm" class="rk-form">
+          <input id="rkNombre" type="text" maxlength="12" placeholder="Tu nombre" autocomplete="nickname" enterkeyhint="send">
+          <button class="btn amarillo" id="rkBoton">🏆 Guardar en el ranking</button>
+        </div>
+        <div id="rkMsg" class="rk-msg"></div>
+        <div id="rkFinLista"></div>
+      </div>
+      <div class="botones">
+        <button class="btn" id="btnOtraVez">🔁 Jugar de nuevo</button>
+        <button class="btn blanco" id="btnModo">Cambiar modo</button>
+        <button class="btn azul" data-ir="s4">Seguir →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PANTALLA 4: CIERRE ===================== -->
+<section id="s4" class="screen cielo scroll">
+  <svg class="skyline" id="sky4" preserveAspectRatio="xMidYMax slice"></svg>
+  <svg class="corner-web tl" id="cw3"></svg>
+  <svg class="corner-web tr" id="cw4"></svg>
+  <div class="wrap">
+    <div class="cierre-titulo comic">¡NOS VEMOS EL SÁBADO, HÉROE!</div>
+    <img class="heroe-final" id="imgFinal" alt="">
+    <div class="countdown grande" id="cd2"></div>
+    <div class="datos-mini" id="datosMini"></div>
+    <div class="botones" style="margin-top:22px">
+      <button class="btn verde grande" id="btnWsp">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="#08311a" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></svg>
+        COMPARTIR POR WHATSAPP
+      </button>
+      <button class="btn blanco" id="btnCopiar">🔗 Copiar enlace</button>
+    </div>
+    <button class="link-sutil" data-ir="s2">← Ver los detalles otra vez</button>
+    <button class="link-sutil" data-ir="s3" style="margin-top:6px">🕸️ Volver a jugar</button>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* Motor del juego "Balanceo por la ciudad".
+   Es determinístico: con la misma semilla y los mismos toques da siempre el mismo resultado.
+   El mismo código corre en el navegador y en el servidor del ranking (para verificar puntajes). */
+function crearSimulacion(modo, semilla) {
+  var DT = 1 / 240;
+  var CALLE = 540, TECHO = -250, RADIO = 22;
+  var MODOS = {
+    facil:  { g: 760,  alcance: 900, gapMin: 165, gapMax: 205, yMin: 95, yMax: 170, recoger: 150, lMin: 90, vidas: 3, ayuda: true,  limite: 60 * 240 },
+    normal: { g: 1100, alcance: 400, gapMin: 205, gapMax: 250, yMin: 60, yMax: 215, recoger: 120, lMin: 80, vidas: 1, ayuda: false, limite: 0 }
+  };
+  var M = MODOS[modo] || MODOS.facil;
+
+  var s = (semilla >>> 0) || 1;
+  function rnd() {
+    s = (s + 0x6D2B79F5) >>> 0;
+    var t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+  function rango(a, b) { return a + rnd() * (b - a); }
+  function raiz(x) { return Math.sqrt(x); }
+
+  var S = {
+    modo: modo, M: M, DT: DT, CALLE: CALLE, TECHO: TECHO,
+    p: { x: 110, y: 300, vx: 320, vy: -420, r: RADIO },
+    cuerda: null, anclas: [], globos: [],
+    metros: 0, nGlobos: 0, vidas: M.vidas,
+    presionado: false, enfriar: 0, pasos: 0, ultimaX: 0,
+    terminado: false, motivo: "", entradas: [], eventos: []
+  };
+
+  function nuevaAncla(x) {
+    var a = { x: x, y: rango(M.yMin, M.yMax), w: rango(70, 105), tono: rnd() };
+    S.anclas.push(a);
+    if (rnd() < (modo === "facil" ? 0.8 : 0.6)) {
+      S.globos.push({ x: x + rango(-70, 70), y: rango(260, 430), c: rnd() < 0.5 ? 0 : 1, fase: rango(0, 4) });
+    }
+    S.ultimaX = x;
+  }
+  nuevaAncla(270);
+  while (S.ultimaX < 1400) nuevaAncla(S.ultimaX + rango(M.gapMin, M.gapMax));
+
+  function engancharse() {
+    var p = S.p, mejor = null, mejorScore = Infinity;
+    for (var i = 0; i < S.anclas.length; i++) {
+      var a = S.anclas[i];
+      if (a.x < p.x - 30 || a.y > p.y - 25) continue;
+      var dx = a.x - p.x, dy = a.y - p.y, d = raiz(dx * dx + dy * dy);
+      if (d > M.alcance) continue;
+      var sc = Math.abs(a.x - (p.x + 150));
+      if (sc < mejorScore) { mejorScore = sc; mejor = a; }
+    }
+    if (!mejor && M.ayuda) {
+      for (var j = 0; j < S.anclas.length; j++) { if (S.anclas[j].x > p.x - 10) { mejor = S.anclas[j]; break; } }
+    }
+    if (mejor) {
+      var ex = mejor.x - p.x, ey = mejor.y - p.y;
+      S.cuerda = { a: mejor, L: raiz(ex * ex + ey * ey) };
+      S.eventos.push("web");
+    } else {
+      S.cuerda = null;
+      S.eventos.push("soltar");
+    }
+  }
+  function soltarCuerda() {
+    if (!S.cuerda) return;
+    S.cuerda = null;
+    if (S.p.vx > 0) S.p.vy -= 70;
+    S.eventos.push("soltar");
+  }
+
+  S.presionar = function () {
+    if (S.terminado || S.presionado) return;
+    S.presionado = true;
+    S.entradas.push(S.pasos);
+    if (!S.cuerda) engancharse();
+  };
+  S.levantar = function () {
+    if (S.terminado || !S.presionado) return;
+    S.presionado = false;
+    S.entradas.push(S.pasos);
+    soltarCuerda();
+  };
+
+  S.paso = function () {
+    if (S.terminado) return;
+    var p = S.p;
+    p.vy += M.g * DT;
+    if (S.cuerda) {
+      var a = S.cuerda.a;
+      S.cuerda.L = Math.max(M.lMin, S.cuerda.L - M.recoger * DT);
+      p.x += p.vx * DT; p.y += p.vy * DT;
+      var dx = p.x - a.x, dy = p.y - a.y, d = raiz(dx * dx + dy * dy);
+      if (d > S.cuerda.L) {
+        var nx = dx / d, ny = dy / d;
+        p.x = a.x + nx * S.cuerda.L; p.y = a.y + ny * S.cuerda.L;
+        var vr = p.vx * nx + p.vy * ny;
+        if (vr > 0) { p.vx -= vr * nx; p.vy -= vr * ny; }
+        var tx = -ny, ty = nx; if (tx < 0) { tx = -tx; ty = -ty; }
+        p.vx += tx * 170 * DT; p.vy += ty * 170 * DT;
+      }
+      if (M.ayuda && p.x > a.x + S.cuerda.L * 0.55 && p.vy < -60) {
+        S.cuerda = null; p.vy -= 60; S.enfriar = 0.22; S.eventos.push("soltar");
+      }
+    } else {
+      p.x += p.vx * DT; p.y += p.vy * DT;
+      p.vx = Math.max(p.vx, M.ayuda ? 140 : 60);
+    }
+    var v = raiz(p.vx * p.vx + p.vy * p.vy);
+    if (v > 1050) { p.vx *= 1050 / v; p.vy *= 1050 / v; }
+    if (p.y < TECHO + p.r) { p.y = TECHO + p.r; if (p.vy < 0) p.vy = 0; }
+
+    for (var i = S.globos.length - 1; i >= 0; i--) {
+      var gl = S.globos[i];
+      gl.fase += DT * 1.5; if (gl.fase >= 4) gl.fase -= 4;
+      var gy = gl.y + S.bamboleo(gl.fase);
+      var gx = gl.x - p.x, gyy = gy - p.y;
+      if (gx * gx + gyy * gyy < 1600) {
+        S.globos.splice(i, 1); S.nGlobos++;
+        S.eventos.push({ tipo: "pop", x: gl.x, y: gy, c: gl.c });
+      }
+    }
+
+    if (p.y > CALLE - p.r) {
+      if (M.vidas > 1 && S.vidas > 1) {
+        S.vidas--; S.cuerda = null; p.y = CALLE - p.r - 1; p.vy = -820; p.vx = Math.max(p.vx, 300);
+        S.eventos.push("rebote");
+      } else {
+        S.vidas = 0; S.terminado = true; S.motivo = "caida"; S.eventos.push("fin");
+      }
+    }
+
+    if (S.enfriar > 0) {
+      S.enfriar -= DT;
+      if (S.enfriar <= 0 && S.presionado && !S.cuerda && M.ayuda) engancharse();
+    }
+
+    S.metros = Math.max(S.metros, Math.floor((p.x - 110) / 25));
+    while (S.ultimaX < p.x + 1600) {
+      var extra = modo === "normal" ? Math.min(150, S.metros * 0.5) : 0;
+      nuevaAncla(S.ultimaX + rango(M.gapMin, M.gapMax) + extra);
+    }
+    var nuevasA = [];
+    for (var k = 0; k < S.anclas.length; k++) {
+      var an = S.anclas[k];
+      if (an.x > p.x - 900 || (S.cuerda && S.cuerda.a === an)) nuevasA.push(an);
+    }
+    S.anclas = nuevasA;
+    var nuevosG = [];
+    for (var m = 0; m < S.globos.length; m++) { if (S.globos[m].x > p.x - 400) nuevosG.push(S.globos[m]); }
+    S.globos = nuevosG;
+
+    S.pasos++;
+    if (!S.terminado && M.limite && S.pasos >= M.limite) { S.terminado = true; S.motivo = "tiempo"; S.eventos.push("fin"); }
+  };
+
+  S.bamboleo = function (fase) { var t = fase < 2 ? fase - 1 : 3 - fase; return 8 * t; };
+  S.puntos = function () { return S.metros + S.nGlobos * 10; };
+  S.segundosRestantes = function () { return M.limite ? Math.max(0, Math.ceil((M.limite - S.pasos) * DT)) : null; };
+  return S;
+}
+
+/* Repite una partida a partir de la semilla y los toques registrados. */
+function repetirPartida(modo, semilla, entradas, maxPasos) {
+  var S = crearSimulacion(modo, semilla);
+  var k = 0, tope = maxPasos || 20 * 60 * 240;
+  while (!S.terminado && S.pasos < tope) {
+    while (k < entradas.length && entradas[k] === S.pasos) {
+      if (k % 2 === 0) S.presionar(); else S.levantar();
+      k++;
+    }
+    S.eventos.length = 0;
+    S.paso();
+  }
+  return { terminado: S.terminado, motivo: S.motivo, pasos: S.pasos, puntos: S.puntos(), metros: S.metros, globos: S.nGlobos, usadas: k };
+}
+</script>
+<script>
+(function(){
+"use strict";
+
+/* ------------------------------------------------------------------
+   Utilidades
+------------------------------------------------------------------ */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const rand = (a,b) => a + Math.random()*(b-a);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const guardar = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+const leer = (k,d) => { try{ const v = localStorage.getItem(k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } };
+
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("on"), 2200);
+}
+function festejo(opts){
+  if (typeof window.confetti === "function"){
+    window.confetti(Object.assign({particleCount:120, spread:80, origin:{y:.6}, colors:["#d0112b","#1f4fd1","#ffffff","#ffd400"]}, opts||{}));
+  }
+}
+
+/* ------------------------------------------------------------------
+   Imagen del personaje (con reemplazo si todavía no se subió)
+------------------------------------------------------------------ */
+const PLACEHOLDER = "data:image/svg+xml;utf8," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">' +
+  '<circle cx="100" cy="100" r="92" fill="#ffffff" stroke="#d0112b" stroke-width="8" stroke-dasharray="18 12"/>' +
+  '<text x="100" y="92" font-family="Arial Black,Arial" font-weight="900" font-size="26" text-anchor="middle" fill="#1f4fd1">TU</text>' +
+  '<text x="100" y="124" font-family="Arial Black,Arial" font-weight="900" font-size="22" text-anchor="middle" fill="#1f4fd1">PERSONAJE</text>' +
+  '</svg>');
+
+function cargarImg(el, src, alt){
+  el.alt = alt || "";
+  el.onerror = () => { el.onerror = null; el.src = PLACEHOLDER; };
+  el.src = src || PLACEHOLDER;
+}
+const IMG = CONFIG.imagenes || {};
+const srcPrincipal = IMG.principal || "";
+cargarImg($("#imgColgado"), IMG.colgado || srcPrincipal, CONFIG.nombre);
+if (!IMG.colgado) $("#imgColgado").classList.add("invertida");
+cargarImg($("#imgFinal"), IMG.festejo || srcPrincipal, CONFIG.nombre);
+cargarImg($("#imgMenu"), IMG.juego || srcPrincipal, "");
+
+const heroGame = new Image();
+let heroGameOk = false;
+heroGame.onload = () => { heroGameOk = true; };
+heroGame.onerror = () => { if (heroGame.src !== PLACEHOLDER){ heroGame.src = PLACEHOLDER; } };
+heroGame.src = IMG.juego || srcPrincipal || PLACEHOLDER;
+
+/* ------------------------------------------------------------------
+   Dibujos SVG: telarañas y ciudad
+------------------------------------------------------------------ */
+const NS = "http://www.w3.org/2000/svg";
+
+function dibujarTelarana(svg, o){
+  const {cx, cy, r, rayos=16, anillos=9, a0=0, a1=Math.PI*2, colores=["#5b0612","#f4f6f9"], anchos=[6,2.4]} = o;
+  const completo = Math.abs(a1-a0) >= Math.PI*2 - 0.01;
+  const n = completo ? rayos : rayos + 1;
+  const ang = i => a0 + (a1-a0) * i / rayos;
+  let d = "";
+  for (let i=0;i<n;i++){
+    const a = ang(i);
+    d += `M${cx} ${cy}L${cx+Math.cos(a)*r*1.2} ${cy+Math.sin(a)*r*1.2}`;
+  }
+  for (let k=1;k<=anillos;k++){
+    const rr = r * Math.pow(k/anillos, 1.15);
+    const lim = completo ? rayos : rayos;
+    for (let i=0;i<lim;i++){
+      const aA = ang(i), aB = ang(i+1), am = (aA+aB)/2;
+      const pA = [cx+Math.cos(aA)*rr, cy+Math.sin(aA)*rr];
+      const pB = [cx+Math.cos(aB)*rr, cy+Math.sin(aB)*rr];
+      const pc = [cx+Math.cos(am)*rr*0.86, cy+Math.sin(am)*rr*0.86];
+      d += `M${pA[0].toFixed(1)} ${pA[1].toFixed(1)}Q${pc[0].toFixed(1)} ${pc[1].toFixed(1)} ${pB[0].toFixed(1)} ${pB[1].toFixed(1)}`;
+    }
+  }
+  colores.forEach((c, i) => {
+    const p = document.createElementNS(NS, "path");
+    p.setAttribute("d", d); p.setAttribute("fill","none"); p.setAttribute("stroke", c);
+    p.setAttribute("stroke-width", anchos[i] || 2); p.setAttribute("stroke-linecap","round");
+    svg.appendChild(p);
+  });
+}
+
+function dibujarCiudad(svg, semilla){
+  const W = 1200, H = 500;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  let s = semilla || 7;
+  const rnd = () => { s = (s*9301+49297)%233280; return s/233280; };
+  const capas = [
+    {color:"#cfe3f7", hMin:180, hMax:380, op:1},
+    {color:"#a9c9ec", hMin:120, hMax:300, op:1},
+    {color:"#86afe0", hMin:70,  hMax:200, op:1}
+  ];
+  capas.forEach((c, ci) => {
+    let x = -20;
+    while (x < W){
+      const w = 50 + rnd()*90, h = c.hMin + rnd()*(c.hMax-c.hMin);
+      const g = document.createElementNS(NS,"g");
+      const r = document.createElementNS(NS,"rect");
+      r.setAttribute("x",x); r.setAttribute("y",H-h); r.setAttribute("width",w); r.setAttribute("height",h);
+      r.setAttribute("fill",c.color); g.appendChild(r);
+      if (rnd() < .3){
+        const a = document.createElementNS(NS,"rect");
+        a.setAttribute("x", x+w/2-2); a.setAttribute("y", H-h-30); a.setAttribute("width",4); a.setAttribute("height",30);
+        a.setAttribute("fill", c.color); g.appendChild(a);
+      }
+      const ventanas = document.createElementNS(NS,"path");
+      let vd = "";
+      for (let yy = H-h+14; yy < H-12; yy += 18){
+        for (let xx = x+8; xx < x+w-10; xx += 14){
+          if (rnd() < .55) vd += `M${xx.toFixed(0)} ${yy.toFixed(0)}h7v9h-7z`;
+        }
+      }
+      ventanas.setAttribute("d", vd); ventanas.setAttribute("fill", "rgba(255,255,255," + (0.35+ci*0.1) + ")");
+      g.appendChild(ventanas);
+      svg.appendChild(g);
+      x += w + (rnd()*6);
+    }
+  });
+}
+
+(function decorar(){
+  const w1 = $("#web1");
+  const W = 1000, H = 1000;
+  w1.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  dibujarTelarana(w1, {cx:500, cy:470, r:760, rayos:18, anillos:11, colores:["#4a040f","#c9cfd8","#ffffff"], anchos:[9,4.2,1.4]});
+
+  dibujarTelarana($("#webMision"), {cx:150, cy:150, r:170, rayos:14, anillos:7, colores:["#1a0006"], anchos:[2.2]});
+
+  ["#cw1","#cw2","#cw3","#cw4"].forEach(id => {
+    const s = $(id); s.setAttribute("viewBox","0 0 200 200");
+    dibujarTelarana(s, {cx:0, cy:0, r:190, rayos:6, anillos:7, a0:0, a1:Math.PI/2, colores:["#5f6b7c"], anchos:[1.6]});
+  });
+  dibujarCiudad($("#sky2"), 11);
+  dibujarCiudad($("#sky4"), 23);
+})();
+
+/* ------------------------------------------------------------------
+   Textos desde CONFIG
+------------------------------------------------------------------ */
+const nombreMay = CONFIG.nombre.toUpperCase();
+$("#cartaNombre").textContent = nombreMay;
+$("#cartaEdad").textContent = CONFIG.edad;
+$("#txtNombre").textContent = nombreMay;
+$("#txtEdad").textContent = CONFIG.edad;
+$("#fDia").textContent = CONFIG.fechaTexto.dia;
+$("#fNum").textContent = CONFIG.fechaTexto.numero;
+$("#fMes").textContent = CONFIG.fechaTexto.mes;
+$("#fHora").textContent = CONFIG.fechaTexto.hora.toUpperCase();
+$("#listaMision").innerHTML = CONFIG.mision.map(m => `<li>${m}</li>`).join("");
+$("#txtDir").textContent = "📍 " + CONFIG.direccion;
+$("#mapa").src = "https://maps.google.com/maps?q=" + encodeURIComponent(CONFIG.direccionCompleta) + "&z=15&output=embed";
+$("#btnMaps").href = CONFIG.mapsLink;
+$("#datosMini").textContent = `${CONFIG.fechaTexto.dia} ${CONFIG.fechaTexto.numero} de ${CONFIG.fechaTexto.mes} · ${CONFIG.fechaTexto.hora} · ${CONFIG.direccion}`;
+
+/* ------------------------------------------------------------------
+   Calendario
+------------------------------------------------------------------ */
+const inicio = new Date(CONFIG.fecha);
+const utc = d => d.toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
+const tituloEvento = `Cumple de ${CONFIG.nombre} 🕷️`;
+const detalleEvento = `¡${CONFIG.nombre} cumple ${CONFIG.edad}! Invitación: ${CONFIG.urlSitio}`;
+
+$("#btnGCal").href = "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+  "&text=" + encodeURIComponent(tituloEvento) +
+  "&dates=" + utc(inicio) + "/" + utc(inicio) +
+  "&details=" + encodeURIComponent(detalleEvento) +
+  "&location=" + encodeURIComponent(CONFIG.direccionCompleta);
+
+$("#btnIcs").addEventListener("click", () => {
+  const esc = t => t.replace(/\\/g,"\\\\").replace(/,/g,"\\,").replace(/;/g,"\\;").replace(/\n/g,"\\n");
+  const ics = [
+    "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Cumple//Invitacion//ES","CALSCALE:GREGORIAN","METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    "UID:cumple-" + utc(inicio) + "@invitacion",
+    "DTSTAMP:" + utc(new Date()),
+    "DTSTART:" + utc(inicio),
+    "SUMMARY:" + esc(tituloEvento),
+    "DESCRIPTION:" + esc(detalleEvento),
+    "LOCATION:" + esc(CONFIG.direccionCompleta),
+    "BEGIN:VALARM","TRIGGER:-PT3H","ACTION:DISPLAY","DESCRIPTION:" + esc(tituloEvento),"END:VALARM",
+    "END:VEVENT","END:VCALENDAR"
+  ].join("\r\n");
+  const blob = new Blob([ics], {type:"text/calendar;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "cumple-" + CONFIG.nombre.toLowerCase() + ".ics";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  Audio2.sfx("click");
+});
+
+/* ------------------------------------------------------------------
+   Cuenta regresiva
+------------------------------------------------------------------ */
+function pintarCountdown(el){
+  const ms = inicio - new Date();
+  if (ms <= 0){
+    const horas = -ms / 3600000;
+    el.innerHTML = `<div class="cd-msg">${horas < 6 ? "¡HOY ES EL DÍA! 🎉" : "¡GRACIAS POR VENIR! ❤️"}</div>`;
+    return;
+  }
+  const d = Math.floor(ms/86400000), h = Math.floor(ms/3600000)%24, m = Math.floor(ms/60000)%60, s = Math.floor(ms/1000)%60;
+  const p = n => String(n).padStart(2,"0");
+  el.innerHTML = [[d,"días"],[p(h),"horas"],[p(m),"min"],[p(s),"seg"]]
+    .map(([v,l]) => `<div class="cd"><b>${v}</b><span>${l}</span></div>`).join("");
+}
+function tick(){ pintarCountdown($("#cd1")); pintarCountdown($("#cd2")); }
+tick(); setInterval(tick, 1000);
+
+/* ------------------------------------------------------------------
+   Audio: efectos + música (incluida o canciones propias)
+------------------------------------------------------------------ */
+const Audio2 = (function(){
+  let ctx = null, master = null, musicBus = null, sfxBus = null, ruido = null;
+  let silencio = leer("cumple_mute", false);
+  let modoMusica = null;             // "synth" | "archivo"
+  let reproductor = null, pista = 0, listaActual = [];
+  let seq = {activo:false, paso:0, proximo:0, tempo:132, timer:null};
+
+  function iniciar(){
+    if (ctx) { if (ctx.state === "suspended") ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+    master = ctx.createGain(); master.gain.value = silencio ? 0 : 1; master.connect(ctx.destination);
+    musicBus = ctx.createGain(); musicBus.gain.value = 0.35 * CONFIG.volumenMusica; musicBus.connect(master);
+    sfxBus = ctx.createGain(); sfxBus.gain.value = 0.6 * CONFIG.volumenEfectos; sfxBus.connect(master);
+    ruido = ctx.createBuffer(1, ctx.sampleRate*1, ctx.sampleRate);
+    const ch = ruido.getChannelData(0); for (let i=0;i<ch.length;i++) ch[i] = Math.random()*2-1;
+  }
+
+  function tono(f, t0, dur, tipo, vol, destino, f2){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = tipo || "square"; o.frequency.setValueAtTime(f, t0);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0+dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.connect(g); g.connect(destino || sfxBus); o.start(t0); o.stop(t0+dur+0.02);
+  }
+  function soplo(t0, dur, fA, fB, vol, destino, q){
+    const s = ctx.createBufferSource(); s.buffer = ruido;
+    const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.Q.value = q || 1.2;
+    f.frequency.setValueAtTime(fA, t0); f.frequency.exponentialRampToValueAtTime(fB, t0+dur);
+    const g = ctx.createGain(); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    s.connect(f); f.connect(g); g.connect(destino || sfxBus); s.start(t0); s.stop(t0+dur+0.02);
+  }
+  const midi = n => 440*Math.pow(2,(n-69)/12);
+
+  function sfx(nombre){
+    if (!ctx || silencio) return;
+    const t = ctx.currentTime;
+    switch(nombre){
+      case "click": tono(880, t, .06, "square", .08); break;
+      case "abrir":
+        soplo(t, .45, 400, 2500, .5);
+        [72,76,79,84,88].forEach((n,i)=>tono(midi(n), t+.25+i*.07, .35, "triangle", .18));
+        break;
+      case "web": soplo(t, .2, 4000, 700, .55, null, 2); tono(1400, t, .16, "sine", .12, null, 380); break;
+      case "soltar": soplo(t, .15, 600, 1800, .2); break;
+      case "pop": soplo(t, .1, 2000, 500, .5, null, .8); tono(700, t, .12, "square", .1, null, 1300); break;
+      case "caer": tono(520, t, .55, "square", .12, null, 70); break;
+      case "rebote": tono(220, t, .22, "sine", .3, null, 660); break;
+      case "record": [72,76,79,84,79,84,88].forEach((n,i)=>tono(midi(n), t+i*.09, .25, "square", .09)); break;
+      case "empezar": [67,72,76].forEach((n,i)=>tono(midi(n), t+i*.1, .18, "square", .09)); break;
+    }
+  }
+
+  /* --- Música incluida (sintetizada) --- */
+  const ACORDES = [45,41,48,43, 45,41,48,40];           // A F C G | A F C E (bajo)
+  const MELODIA = [
+    69,null,72,76, 81,null,79,76,   77,null,76,72, 69,null,72,null,
+    72,null,76,79, 84,null,79,76,   79,null,74,71, 67,71,74,76,
+    81,null,79,76, 72,null,76,79,   77,null,81,null, 84,null,81,77,
+    76,null,79,null, 84,83,84,null, 76,null,80,null, 83,null,80,null
+  ];
+  function programarPaso(paso, t){
+    const corchea = 60 / seq.tempo / 2;
+    const compas = Math.floor(paso/8) % 8, enCompas = paso % 8;
+    const raiz = ACORDES[compas];
+    tono(midi(raiz + (enCompas%2 ? 12 : 0)), t, corchea*0.9, "triangle", .5, musicBus);
+    const n = MELODIA[paso % 64];
+    if (n !== null){
+      const larga = MELODIA[(paso+1)%64] === null;
+      tono(midi(n), t, corchea*(larga?1.8:0.85), "square", .13, musicBus);
+    }
+    if (enCompas === 0 || enCompas === 4){ tono(150, t, .14, "sine", .9, musicBus, 45); }
+    if (enCompas === 2 || enCompas === 6){ soplo(t, .12, 1800, 1200, .45, musicBus, .7); }
+    soplo(t, .03, 9000, 8000, .12, musicBus, 1);
+  }
+  function scheduler(){
+    if (!seq.activo) return;
+    const corchea = 60 / seq.tempo / 2;
+    while (seq.proximo < ctx.currentTime + 0.15){
+      programarPaso(seq.paso, seq.proximo);
+      seq.paso++; seq.proximo += corchea;
+    }
+  }
+  function synthOn(tempo){
+    seq.tempo = tempo || 132;
+    if (seq.activo) return;
+    seq.activo = true; seq.paso = 0; seq.proximo = ctx.currentTime + 0.05;
+    seq.timer = setInterval(scheduler, 40);
+  }
+  function synthOff(){ seq.activo = false; clearInterval(seq.timer); }
+
+  /* --- Canciones propias --- */
+  function archivoOn(lista){
+    listaActual = lista; pista = 0;
+    if (!reproductor){
+      reproductor = new Audio();
+      reproductor.preload = "auto";
+      reproductor.addEventListener("ended", () => {
+        pista = (pista + 1) % listaActual.length;
+        reproductor.src = listaActual[pista];
+        if (!silencio) reproductor.play().catch(()=>{});
+      });
+      reproductor.addEventListener("error", () => { archivoOff(); modoMusica = "synth"; synthOn(); });
+    }
+    reproductor.volume = clamp(CONFIG.volumenMusica, 0, 1);
+    reproductor.loop = lista.length === 1;
+    reproductor.src = lista[0];
+    if (!silencio) reproductor.play().catch(()=>{});
+  }
+  function archivoOff(){ if (reproductor){ reproductor.pause(); } }
+
+  function musica(escena){
+    if (!ctx) return;
+    const juego = escena === "juego";
+    if (juego && CONFIG.musicaJuego){
+      synthOff(); modoMusica = "archivo"; archivoOn([CONFIG.musicaJuego]); return;
+    }
+    if (CONFIG.canciones && CONFIG.canciones.length){
+      synthOff();
+      const misma = modoMusica === "archivo" && listaActual === CONFIG.canciones;
+      modoMusica = "archivo";
+      if (!misma) archivoOn(CONFIG.canciones);
+      return;
+    }
+    archivoOff(); modoMusica = "synth";
+    if (seq.activo){ seq.tempo = juego ? 150 : 132; } else { synthOn(juego ? 150 : 132); }
+  }
+
+  function setSilencio(v){
+    silencio = v; guardar("cumple_mute", v);
+    if (master) master.gain.setTargetAtTime(v ? 0 : 1, ctx.currentTime, 0.05);
+    if (reproductor){ if (v) reproductor.pause(); else if (modoMusica === "archivo") reproductor.play().catch(()=>{}); }
+    $("#sonido").textContent = v ? "🔇" : "🔊";
+  }
+  $("#sonido").textContent = silencio ? "🔇" : "🔊";
+
+  return { iniciar, sfx, musica, setSilencio, get silencio(){ return silencio; } };
+})();
+
+$("#sonido").addEventListener("click", () => { Audio2.iniciar(); Audio2.setSilencio(!Audio2.silencio); });
+
+/* ------------------------------------------------------------------
+   Navegación entre pantallas
+------------------------------------------------------------------ */
+let pantalla = "s1";
+function ir(id){
+  if (id === pantalla) return;
+  $("#" + pantalla).classList.remove("active");
+  const el = $("#" + id);
+  el.classList.add("active");
+  if (el.classList.contains("scroll")) el.scrollTop = 0;
+  const previa = pantalla; pantalla = id;
+  if (previa === "s3") Juego.salir();
+  if (id === "s3"){ Juego.entrar(); Audio2.musica("juego"); }
+  else Audio2.musica("invitacion");
+  if (id === "s2"){
+    const n = $("#txtEdad"); n.classList.remove("pop"); void n.offsetWidth; n.classList.add("pop");
+  }
+  if (id === "s4"){ setTimeout(()=>festejo({particleCount:160, spread:100}), 350); }
+}
+$$("[data-ir]").forEach(b => b.addEventListener("click", () => { Audio2.sfx("click"); ir(b.dataset.ir); }));
+
+/* ------------------------------------------------------------------
+   Pantalla 1: abrir sobre
+------------------------------------------------------------------ */
+let abierto = false;
+$("#sobre").addEventListener("click", () => {
+  if (abierto) return; abierto = true;
+  Audio2.iniciar(); Audio2.sfx("abrir");
+  $("#sobre").classList.add("abierto");
+  setTimeout(()=>festejo({origin:{y:.45}}), 700);
+  setTimeout(()=>{ $("#sonido").classList.add("visible"); ir("s2"); }, 2000);
+});
+
+/* ------------------------------------------------------------------
+   Pantalla 4: compartir
+------------------------------------------------------------------ */
+const urlCompartir = () => CONFIG.urlSitio || location.href;
+$("#btnWsp").addEventListener("click", () => {
+  const txt = CONFIG.mensajeWhatsApp + " " + urlCompartir();
+  window.open("https://wa.me/?text=" + encodeURIComponent(txt), "_blank");
+});
+$("#btnCopiar").addEventListener("click", async () => {
+  try{ await navigator.clipboard.writeText(urlCompartir()); toast("¡Enlace copiado! 🕸️"); }
+  catch(e){ prompt("Copiá el enlace:", urlCompartir()); }
+});
+
+/* ------------------------------------------------------------------
+   Ranking online
+------------------------------------------------------------------ */
+const Ranking = (function(){
+  const url = (CONFIG.rankingUrl || "").trim();
+  let top = null;
+  const activo = !!url;
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  async function cargar(){
+    if (!activo) return null;
+    try{
+      const r = await fetch(url, {cache:"no-store"});
+      const j = await r.json();
+      if (j && j.ok) top = j.top;
+    }catch(e){}
+    return top;
+  }
+  async function enviar(datos){
+    const r = await fetch(url, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(datos)});
+    const j = await r.json();
+    if (j && j.ok && j.top) top = j.top;
+    return j;
+  }
+  function pintar(el, modo, resaltar){
+    if (!el) return;
+    if (!top){ el.innerHTML = '<div class="rk-vacio">Cargando ranking…</div>'; return; }
+    const lista = top[modo] || [];
+    if (!lista.length){ el.innerHTML = '<div class="rk-vacio">¡Todavía nadie! Sé el primero 🦸</div>'; return; }
+    const medallas = ["🥇","🥈","🥉"];
+    el.innerHTML = '<ol class="rk-lista">' + lista.map((x,i) => {
+      const yo = resaltar && x.nombre.toLowerCase() === resaltar.toLowerCase();
+      return `<li class="${yo ? "yo" : ""}"><span class="rk-pos">${medallas[i] || (i+1)}</span><span class="rk-nom">${esc(x.nombre)}</span><span class="rk-pts">${x.puntos}</span></li>`;
+    }).join("") + '</ol>';
+  }
+  return { activo, cargar, enviar, pintar, get top(){ return top; } };
+})();
+
+/* ------------------------------------------------------------------
+   Pantalla 3: JUEGO — Balanceo por la ciudad
+------------------------------------------------------------------ */
+const Juego = (function(){
+  const cv = $("#juego"), cx = cv.getContext("2d");
+  const ALTO = 600, CALLE = 540, MIN_ANCHO = 520;
+  const COLORES_GLOBO = ["#d0112b", "#1f4fd1"];
+  const VELOCIDAD = {facil: .85, normal: 1};
+  let W=0, H=0, dpr=1, esc=1, vistaW=0, vistaH=0, offY=0;
+  let estado = "menu", modo = "facil", sim = null, semilla = 1, enviado = false;
+  let parts = [], camX = 0, acc = 0, tPista = 0, ultimoT = 0, raf = null, nubes = [], lejanos = [];
+  let tabRanking = "facil";
+  const records = leer("cumple_records", {facil:0, normal:0});
+
+  function medir(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+    esc = Math.min(H/ALTO, W/MIN_ANCHO);
+    vistaW = W/esc; vistaH = H/esc; offY = (vistaH - ALTO) * 0.72;
+  }
+  window.addEventListener("resize", () => { if (pantalla === "s3") medir(); });
+
+  function textoRecords(){
+    $("#recordsTxt").textContent = `🏆 Tu récord · Fácil: ${records.facil} · Normal: ${records.normal}`;
+  }
+
+  function generarFondo(){
+    nubes = []; for (let i=0;i<8;i++) nubes.push({x:rand(0,1600), y:rand(-260, 160), s:rand(.6,1.4)});
+    lejanos = []; let x = 0;
+    while (x < 1600){ const w = rand(50,110); lejanos.push({x, w, h:rand(120,300)}); x += w + rand(0,8); }
+  }
+
+  function nuevaSemilla(){
+    try{ const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] || 1; }
+    catch(e){ return (Math.floor(Math.random()*4294967295) >>> 0) || 1; }
+  }
+
+  function reiniciar(){
+    semilla = nuevaSemilla();
+    sim = crearSimulacion(modo, semilla);
+    parts = []; camX = 0; acc = 0; tPista = 0; enviado = false;
+    generarFondo(); actualizarHud();
+    $("#pista").style.opacity = 1;
+  }
+
+  function actualizarHud(){
+    if (!sim) return;
+    $("#hudMetros").textContent = sim.metros + " m";
+    $("#hudGlobos").textContent = "🎈 " + sim.nGlobos;
+    const hv = $("#hudVidas"), ht = $("#hudTiempo");
+    if (sim.M.vidas > 1){ hv.style.display = ""; hv.textContent = "❤️".repeat(Math.max(sim.vidas,0)) + "🤍".repeat(sim.M.vidas - Math.max(sim.vidas,0)); }
+    else hv.style.display = "none";
+    const seg = sim.segundosRestantes();
+    if (seg !== null){ ht.style.display = ""; ht.textContent = "⏱ " + seg; }
+    else ht.style.display = "none";
+  }
+
+  function estallido(x, y, color, n){
+    for (let i=0;i<n;i++){
+      const a = rand(0, Math.PI*2), s = rand(80, 320);
+      parts.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s - 60, vida:rand(.4,.8), c:color, r:rand(3,6)});
+    }
+  }
+
+  function procesarEventos(){
+    for (const ev of sim.eventos){
+      if (typeof ev === "object"){
+        if (ev.tipo === "pop"){ estallido(ev.x, ev.y, COLORES_GLOBO[ev.c], 18); Audio2.sfx("pop"); }
+      } else if (ev === "rebote"){
+        estallido(sim.p.x, CALLE, "#ffffff", 14); Audio2.sfx("rebote");
+        if (navigator.vibrate) try{ navigator.vibrate(60); }catch(e){}
+      } else if (ev !== "fin"){
+        Audio2.sfx(ev);
+      }
+    }
+    sim.eventos.length = 0;
+  }
+
+  function actualizar(dt){
+    if (estado === "jugando"){
+      acc += dt * VELOCIDAD[modo];
+      let n = 0;
+      while (acc >= sim.DT && n < 60 && !sim.terminado){ sim.paso(); acc -= sim.DT; n++; }
+      if (n >= 60) acc = 0;
+      procesarEventos();
+      actualizarHud();
+      tPista += dt;
+      if (tPista > 4) $("#pista").style.opacity = 0;
+      if (sim.terminado) terminar();
+    }
+    for (let i = parts.length-1; i >= 0; i--){
+      const q = parts[i]; q.vida -= dt; q.vy += 600*dt; q.x += q.vx*dt; q.y += q.vy*dt;
+      if (q.vida <= 0) parts.splice(i,1);
+    }
+    const objetivo = sim.p.x - vistaW*0.3;
+    camX += (objetivo - camX) * Math.min(1, dt*6);
+  }
+
+  /* --- Dibujo --- */
+  function nube(x, y, s){
+    cx.beginPath();
+    cx.arc(x, y, 22*s, 0, Math.PI*2); cx.arc(x+24*s, y-10*s, 26*s, 0, Math.PI*2);
+    cx.arc(x+52*s, y, 20*s, 0, Math.PI*2); cx.rect(x, y, 52*s, 18*s);
+    cx.fill();
+  }
+  function dibujar(){
+    cx.setTransform(dpr,0,0,dpr,0,0);
+    const cielo = cx.createLinearGradient(0,0,0,H);
+    cielo.addColorStop(0,"#9fd0ff"); cielo.addColorStop(.7,"#e8f4ff"); cielo.addColorStop(1,"#ffffff");
+    cx.fillStyle = cielo; cx.fillRect(0,0,W,H);
+    if (!sim) return;
+
+    cx.setTransform(dpr*esc,0,0,dpr*esc,0,offY*esc*dpr);
+    cx.fillStyle = "rgba(255,255,255,.9)";
+    for (const n of nubes){ nube(((n.x - camX*0.1) % 1700 + 1700) % 1700 - 100, n.y, n.s); }
+    cx.fillStyle = "#c7dcf3";
+    for (const b of lejanos){ cx.fillRect(((b.x - camX*0.3) % 1600 + 1600) % 1600 - 120, CALLE - b.h, b.w, b.h); }
+
+    cx.save(); cx.translate(-camX, 0);
+
+    for (const a of sim.anclas){
+      const x0 = a.x - a.w/2;
+      cx.fillStyle = a.tono < .5 ? "#2f5fb8" : "#3a6fcc";
+      cx.fillRect(x0, a.y, a.w, CALLE - a.y);
+      cx.fillStyle = "#24498f"; cx.fillRect(x0 - 4, a.y - 6, a.w + 8, 8);
+      cx.fillStyle = "rgba(255,240,170,.75)";
+      for (let yy = a.y + 16; yy < CALLE - 14; yy += 22){
+        for (let xx = x0 + 9; xx < x0 + a.w - 14; xx += 18){
+          if (((Math.floor(xx)*7 + Math.floor(yy)*13 + Math.floor(a.x)) % 5) < 3) cx.fillRect(xx, yy, 9, 11);
+        }
+      }
+      cx.strokeStyle = "#24498f"; cx.lineWidth = 3;
+      cx.beginPath(); cx.moveTo(a.x, a.y - 6); cx.lineTo(a.x, a.y - 22); cx.stroke();
+      cx.fillStyle = "#ffffff"; cx.strokeStyle = "#141a2e"; cx.lineWidth = 2.5;
+      cx.beginPath(); cx.arc(a.x, a.y - 24, 6, 0, Math.PI*2); cx.fill(); cx.stroke();
+    }
+
+    cx.fillStyle = "#2a3550"; cx.fillRect(camX - 50, CALLE, vistaW + 100, ALTO - CALLE + offY + 400);
+    cx.fillStyle = "#f2c94c";
+    const d0 = Math.floor((camX - 50)/80)*80;
+    for (let x = d0; x < camX + vistaW + 80; x += 80) cx.fillRect(x, CALLE + 28, 40, 6);
+    cx.fillStyle = "#3d4a6b"; cx.fillRect(camX - 50, CALLE, vistaW + 100, 8);
+
+    for (const g of sim.globos){
+      const gy = g.y + sim.bamboleo(g.fase);
+      cx.strokeStyle = "rgba(20,26,46,.6)"; cx.lineWidth = 1.5;
+      cx.beginPath(); cx.moveTo(g.x, gy + 22); cx.quadraticCurveTo(g.x + 6, gy + 36, g.x, gy + 48); cx.stroke();
+      cx.fillStyle = COLORES_GLOBO[g.c]; cx.strokeStyle = "#141a2e"; cx.lineWidth = 2.5;
+      cx.beginPath(); cx.ellipse(g.x, gy, 17, 21, 0, 0, Math.PI*2); cx.fill(); cx.stroke();
+      cx.fillStyle = "rgba(255,255,255,.55)";
+      cx.beginPath(); cx.ellipse(g.x - 6, gy - 8, 4, 7, -.4, 0, Math.PI*2); cx.fill();
+    }
+
+    const p = sim.p;
+    if (sim.cuerda){
+      const a = sim.cuerda.a;
+      cx.lineCap = "round";
+      cx.strokeStyle = "#5b6577"; cx.lineWidth = 5;
+      cx.beginPath(); cx.moveTo(p.x, p.y - 8); cx.lineTo(a.x, a.y - 24); cx.stroke();
+      cx.strokeStyle = "#ffffff"; cx.lineWidth = 2.5;
+      cx.beginPath(); cx.moveTo(p.x, p.y - 8); cx.lineTo(a.x, a.y - 24); cx.stroke();
+    }
+
+    for (const q of parts){
+      cx.globalAlpha = clamp(q.vida*1.6, 0, 1); cx.fillStyle = q.c;
+      cx.beginPath(); cx.arc(q.x, q.y, q.r, 0, Math.PI*2); cx.fill();
+    }
+    cx.globalAlpha = 1;
+
+    cx.save();
+    cx.translate(p.x, p.y);
+    cx.rotate(clamp(Math.atan2(p.vy, Math.max(p.vx, 1)) * 0.35, -0.6, 0.6));
+    const T = 84;
+    if (heroGame.complete && heroGame.naturalWidth){
+      const r = heroGame.naturalWidth / heroGame.naturalHeight;
+      const w = r >= 1 ? T : T*r, h = r >= 1 ? T/r : T;
+      cx.drawImage(heroGame, -w/2, -h/2, w, h);
+    } else {
+      cx.fillStyle = "#d0112b"; cx.strokeStyle = "#141a2e"; cx.lineWidth = 3;
+      cx.beginPath(); cx.arc(0, 0, p.r, 0, Math.PI*2); cx.fill(); cx.stroke();
+    }
+    cx.restore();
+    cx.restore();
+  }
+
+  function bucle(t){
+    raf = requestAnimationFrame(bucle);
+    const dt = ultimoT ? Math.min(0.05, (t - ultimoT) / 1000) : 0;
+    ultimoT = t;
+    if (sim) actualizar(estado === "fin" ? dt*0.5 : dt);
+    dibujar();
+  }
+
+  /* --- Estados --- */
+  function empezar(m){
+    modo = m; reiniciar(); estado = "jugando";
+    $("#menuJuego").classList.add("oculto"); $("#finJuego").classList.add("oculto");
+    $("#hud").style.display = "";
+    Audio2.sfx("empezar");
+  }
+
+  function terminar(){
+    if (estado !== "jugando") return;
+    estado = "fin";
+    Audio2.sfx(sim.motivo === "tiempo" ? "record" : "caer");
+    const puntos = sim.puntos();
+    const nuevo = puntos > (records[modo] || 0);
+    if (nuevo){ records[modo] = puntos; guardar("cumple_records", records); }
+    setTimeout(() => {
+      $("#finTitulo").textContent = sim.motivo === "tiempo" ? "¡TIEMPO! ¡GENIAL!" : (modo === "facil" ? "¡MUY BIEN, HÉROE!" : "¡UY, TE CAÍSTE!");
+      $("#finPuntos").textContent = puntos + " pts";
+      $("#finNuevo").innerHTML = nuevo && puntos > 0 ? '<span class="nuevo-record">🏆 ¡TU NUEVO RÉCORD!</span>' : "";
+      $("#finRecord").textContent = `${sim.metros} m + ${sim.nGlobos} 🎈 × 10 · Tu récord ${modo === "facil" ? "Fácil" : "Normal"}: ${records[modo]}`;
+      prepararFormulario(puntos);
+      $("#finJuego").classList.remove("oculto");
+      $("#hud").style.display = "none";
+      if (nuevo && puntos > 0){ Audio2.sfx("record"); festejo({particleCount:150, spread:90}); }
+    }, 650);
+  }
+
+  /* --- Ranking en pantalla --- */
+  function prepararFormulario(puntos){
+    const caja = $("#rkGuardar");
+    $("#rkFinLista").innerHTML = "";
+    $("#rkMsg").textContent = "";
+    if (!Ranking.activo || puntos <= 0){ caja.style.display = "none"; return; }
+    caja.style.display = "";
+    $("#rkNombre").value = leer("cumple_nombre", "");
+    $("#rkBoton").disabled = false;
+    $("#rkBoton").textContent = "🏆 Guardar en el ranking";
+    $("#rkForm").style.display = "";
+  }
+
+  async function guardarRanking(){
+    if (enviado) return;
+    const nombre = $("#rkNombre").value.replace(/\s+/g, " ").trim().slice(0, 12);
+    if (!nombre){ $("#rkMsg").textContent = "Escribí tu nombre 🙂"; $("#rkNombre").focus(); return; }
+    guardar("cumple_nombre", nombre);
+    enviado = true;
+    const b = $("#rkBoton"); b.disabled = true; b.textContent = "Verificando partida…";
+    try{
+      const r = await Ranking.enviar({nombre, modo, semilla, entradas: sim.entradas, pasos: sim.pasos});
+      if (r && r.ok){
+        $("#rkForm").style.display = "none";
+        let msg = `✅ Guardado: ${r.puntos} pts`;
+        if (r.puesto === 1){ msg = `🥇 ¡NUEVO CAMPEÓN! ${r.puntos} pts`; festejo({particleCount:200, spread:120}); Audio2.sfx("record"); }
+        else if (r.puesto) msg = `✅ ¡Quedaste #${r.puesto} con ${r.puntos} pts!`;
+        $("#rkMsg").textContent = msg;
+        Ranking.pintar($("#rkFinLista"), modo, nombre);
+      } else {
+        enviado = (r && r.error === "Esta partida ya se guardó");
+        b.disabled = enviado; b.textContent = "🏆 Guardar en el ranking";
+        $("#rkMsg").textContent = "⚠️ " + ((r && r.error) || "No se pudo guardar");
+      }
+    }catch(e){
+      enviado = false; b.disabled = false; b.textContent = "🏆 Reintentar";
+      $("#rkMsg").textContent = "⚠️ Sin conexión. Probá de nuevo.";
+    }
+  }
+
+  function mostrarTab(m){
+    tabRanking = m;
+    $$(".rk-tab").forEach(t => t.classList.toggle("on", t.dataset.tab === m));
+    Ranking.pintar($("#rkMenuLista"), m, leer("cumple_nombre", ""));
+  }
+
+  /* --- Controles --- */
+  function presionar(e){
+    if (e) e.preventDefault();
+    if (estado === "jugando") sim.presionar();
+  }
+  function levantar(e){
+    if (estado === "jugando"){ if (e) e.preventDefault(); sim.levantar(); }
+  }
+  cv.addEventListener("pointerdown", presionar);
+  window.addEventListener("pointerup", levantar);
+  window.addEventListener("pointercancel", levantar);
+  window.addEventListener("keydown", e => { if (pantalla === "s3" && (e.code === "Space" || e.code === "ArrowUp") && !e.repeat && document.activeElement.tagName !== "INPUT") presionar(e); });
+  window.addEventListener("keyup", e => { if (pantalla === "s3" && (e.code === "Space" || e.code === "ArrowUp") && document.activeElement.tagName !== "INPUT") levantar(e); });
+  cv.addEventListener("contextmenu", e => e.preventDefault());
+
+  $$("[data-modo]").forEach(b => b.addEventListener("click", () => empezar(b.dataset.modo)));
+  $("#btnOtraVez").addEventListener("click", () => empezar(modo));
+  $("#btnModo").addEventListener("click", () => abrirMenu());
+  $("#rkBoton").addEventListener("click", guardarRanking);
+  $("#rkNombre").addEventListener("keydown", e => { if (e.key === "Enter") guardarRanking(); });
+  $$(".rk-tab").forEach(t => t.addEventListener("click", () => mostrarTab(t.dataset.tab)));
+
+  function abrirMenu(){
+    estado = "menu";
+    $("#finJuego").classList.add("oculto"); $("#menuJuego").classList.remove("oculto"); $("#hud").style.display = "none";
+    $("#pista").style.opacity = 0;
+    textoRecords();
+    if (Ranking.activo){
+      $("#rkMenu").style.display = "";
+      mostrarTab(tabRanking);
+      Ranking.cargar().then(() => mostrarTab(tabRanking));
+    } else $("#rkMenu").style.display = "none";
+  }
+
+  function entrar(){
+    medir();
+    if (!sim){ modo = "facil"; reiniciar(); }
+    abrirMenu();
+    ultimoT = 0;
+    if (!raf) raf = requestAnimationFrame(bucle);
+  }
+  function salir(){
+    if (estado === "jugando") estado = "menu";
+    if (raf){ cancelAnimationFrame(raf); raf = null; }
+  }
+
+  return { entrar, salir };
+})();
+
+})();
+</script>
+</body>
+</html>

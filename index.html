@@ -13,7 +13,7 @@
 <meta property="og:title" content="¡Dante cumple 3! 🕷️">
 <meta property="og:description" content="Sábado 14 de noviembre · 20 hs · Tocá para abrir tu invitación">
 <meta property="og:url" content="https://gaston-lizondo.github.io/cumple-dante/">
-<meta property="og:image" content="https://gaston-lizondo.github.io/cumple-dante/preview.jpg">
+<meta property="og:image" content="https://gaston-lizondo.github.io/cumple-dante/preview.jpg?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -52,8 +52,8 @@ const CONFIG = {
   // juego:     opcional. Si queda vacío, se usa la principal.
   imagenes: {
     principal: "personaje.png",
-    colgado: "",
-    juego: "",
+    colgado: "colgado.png",
+    juego: "juego.png",
     festejo: ""   // opcional: imagen para la pantalla final (si queda vacía, se usa la principal)
   },
 
@@ -61,7 +61,7 @@ const CONFIG = {
   // Dejá la lista vacía [] para usar la música incluida.
   // Para usar tus canciones: subí los mp3 a la carpeta "musica" y agregalos acá, por ejemplo:
   // canciones: ["musica/cancion1.mp3", "musica/cancion2.mp3"],
-  canciones: [],
+  canciones: ["musica/cumple.mp3"],
   // Canción especial para el juego (opcional). Ej: "musica/juego.mp3"
   musicaJuego: "",
   volumenMusica: 0.5,   // de 0 a 1
@@ -157,7 +157,7 @@ button{font-family:inherit;cursor:pointer;border:none}
   text-shadow:8px 8px 0 var(--azul),8px 8px 0 var(--tinta);display:inline-block;transform-origin:center bottom}
 .pop{animation:pop .9s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes pop{0%{transform:scale(0) rotate(-20deg)}100%{transform:scale(1) rotate(-6deg)}}
-.hang{position:absolute;right:4%;top:-64px;width:42%;max-width:170px;transform-origin:50% 0;animation:swing 3.2s ease-in-out infinite;z-index:3}
+.hang{position:absolute;right:4%;top:-64px;width:34%;max-width:135px;transform-origin:50% 0;animation:swing 3.2s ease-in-out infinite;z-index:3}
 @keyframes swing{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-7deg)}}
 .hang .thread{width:3px;height:96px;margin:0 auto;background:linear-gradient(90deg,#9aa4b2,#fff,#9aa4b2)}
 .hang img{display:block;width:100%;height:auto;filter:drop-shadow(0 8px 8px rgba(0,0,0,.25))}
@@ -246,7 +246,7 @@ button{font-family:inherit;cursor:pointer;border:none}
 /* ---------- Pantalla 4: cierre ---------- */
 #s4 .wrap{text-align:center;padding-top:76px}
 .cierre-titulo{font-size:clamp(48px,14vw,68px);color:var(--rojo);-webkit-text-stroke:2px var(--tinta);text-shadow:5px 5px 0 var(--azul);line-height:1}
-.heroe-final{width:min(60vw,240px);margin:18px auto 6px;display:block;animation:saltito 2.2s ease-in-out infinite;filter:drop-shadow(0 12px 10px rgba(0,0,0,.25))}
+.heroe-final{height:min(40vh,300px);width:auto;max-width:80vw;object-fit:contain;margin:18px auto 6px;display:block;animation:saltito 2.2s ease-in-out infinite;filter:drop-shadow(0 12px 10px rgba(0,0,0,.25))}
 @keyframes saltito{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
 .countdown.grande .cd{min-width:76px;padding:12px 6px 8px}
 .countdown.grande .cd b{font-size:50px}
@@ -1211,13 +1211,24 @@ const Juego = (function(){
     }
 
     const p = sim.p;
+    const ang = clamp(Math.atan2(p.vy, Math.max(p.vx, 1)) * 0.35, -0.6, 0.6);
+    const T = 112;
+    let w = T, h = T;
+    if (heroGame.complete && heroGame.naturalWidth){
+      const r = heroGame.naturalWidth / heroGame.naturalHeight;
+      w = r >= 1 ? T : T*r; h = r >= 1 ? T/r : T;
+    }
     if (sim.cuerda){
       const a = sim.cuerda.a;
+      // la telaraña sale de la mano (arriba a la derecha de la imagen del juego)
+      const ox = w*0.4, oy = -h*0.42;
+      const hx = p.x + ox*Math.cos(ang) - oy*Math.sin(ang);
+      const hy = p.y + ox*Math.sin(ang) + oy*Math.cos(ang);
       cx.lineCap = "round";
       cx.strokeStyle = "#5b6577"; cx.lineWidth = 5;
-      cx.beginPath(); cx.moveTo(p.x, p.y - 8); cx.lineTo(a.x, a.y - 24); cx.stroke();
+      cx.beginPath(); cx.moveTo(hx, hy); cx.lineTo(a.x, a.y - 24); cx.stroke();
       cx.strokeStyle = "#ffffff"; cx.lineWidth = 2.5;
-      cx.beginPath(); cx.moveTo(p.x, p.y - 8); cx.lineTo(a.x, a.y - 24); cx.stroke();
+      cx.beginPath(); cx.moveTo(hx, hy); cx.lineTo(a.x, a.y - 24); cx.stroke();
     }
 
     for (const q of parts){
@@ -1228,11 +1239,8 @@ const Juego = (function(){
 
     cx.save();
     cx.translate(p.x, p.y);
-    cx.rotate(clamp(Math.atan2(p.vy, Math.max(p.vx, 1)) * 0.35, -0.6, 0.6));
-    const T = 84;
+    cx.rotate(ang);
     if (heroGame.complete && heroGame.naturalWidth){
-      const r = heroGame.naturalWidth / heroGame.naturalHeight;
-      const w = r >= 1 ? T : T*r, h = r >= 1 ? T/r : T;
       cx.drawImage(heroGame, -w/2, -h/2, w, h);
     } else {
       cx.fillStyle = "#d0112b"; cx.strokeStyle = "#141a2e"; cx.lineWidth = 3;

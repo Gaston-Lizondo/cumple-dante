@@ -218,6 +218,7 @@ button{font-family:inherit;cursor:pointer;border:none}
 .modos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
 .modos .btn{flex-direction:column;gap:2px;font-size:20px;padding:12px 8px}
 .modos .btn small{font-size:12px;font-weight:600;opacity:.95}
+.modos .btn.noche{grid-column:1 / -1;background:linear-gradient(135deg,#0b1030,#24357a);color:#fff}
 .record{font-weight:700;color:var(--azul-osc);margin-top:12px;font-size:15px}
 .puntaje{font-family:'Bangers';font-size:64px;color:var(--azul);-webkit-text-stroke:1.5px var(--tinta);line-height:1;margin:6px 0}
 .nuevo-record{display:inline-block;background:#ffd400;border:3px solid var(--tinta);border-radius:999px;padding:4px 14px;font-weight:700;transform:rotate(-3deg);margin-bottom:8px;animation:latido2 .8s ease-in-out infinite}
@@ -227,7 +228,7 @@ button{font-family:inherit;cursor:pointer;border:none}
 .btn.amarillo{background:#ffd400;color:var(--tinta)}
 .rk{margin-top:14px;text-align:left}
 .rk-titulo{font-family:'Bangers';font-size:26px;text-align:center;color:var(--tinta);letter-spacing:.05em}
-.rk-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 8px}
+.rk-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:6px 0 8px}
 .rk-tab{padding:8px;border-radius:10px;border:3px solid var(--tinta);background:#fff;font-weight:700;font-size:15px;color:var(--tinta)}
 .rk-tab.on{background:var(--azul);color:#fff}
 .rk-lista{list-style:none;border:3px solid var(--tinta);border-radius:12px;overflow:hidden;background:#fff}
@@ -367,10 +368,11 @@ button{font-family:inherit;cursor:pointer;border:none}
     <div class="panel">
       <img class="mini" id="imgMenu" alt="">
       <h2>BALANCEO POR LA CIUDAD</h2>
-      <p>Mantené apretada la pantalla para engancharte con la telaraña y soltá para salir volando. ¡No toques la calle! Agarrá los globos 🎈 para sumar puntos.</p>
+      <p>Mantené apretada la pantalla para engancharte con la telaraña y soltá para salir volando. ¡No toques la calle! Agarrá los globos 🎈 para sumar puntos. En Difícil, esquivá los drones 🔴.</p>
       <div class="modos">
         <button class="btn azul" data-modo="facil">🧒 Fácil<small>para los más chicos</small></button>
         <button class="btn" data-modo="normal">🦸 Normal<small>para héroes grandes</small></button>
+        <button class="btn noche" data-modo="dificil">🌙 Difícil<small>de noche, más rápido y con drones</small></button>
       </div>
       <div class="record" id="recordsTxt"></div>
       <div id="rkMenu" class="rk" style="display:none">
@@ -378,6 +380,7 @@ button{font-family:inherit;cursor:pointer;border:none}
         <div class="rk-tabs">
           <button class="rk-tab on" data-tab="facil">Fácil</button>
           <button class="rk-tab" data-tab="normal">Normal</button>
+          <button class="rk-tab" data-tab="dificil">Difícil</button>
         </div>
         <div id="rkMenuLista"></div>
       </div>
@@ -442,7 +445,9 @@ function crearSimulacion(modo, semilla) {
   var CALLE = 540, TECHO = -250, RADIO = 22;
   var MODOS = {
     facil:  { g: 760,  alcance: 900, gapMin: 165, gapMax: 205, yMin: 95, yMax: 170, recoger: 150, lMin: 90, vidas: 3, ayuda: true,  limite: 60 * 240 },
-    normal: { g: 1100, alcance: 400, gapMin: 205, gapMax: 250, yMin: 60, yMax: 215, recoger: 120, lMin: 80, vidas: 1, ayuda: false, limite: 0 }
+    normal: { g: 1100, alcance: 400, gapMin: 205, gapMax: 250, yMin: 60, yMax: 215, recoger: 120, lMin: 80, vidas: 1, ayuda: false, limite: 0 },
+    dificil:{ g: 1350, alcance: 390, gapMin: 225, gapMax: 275, yMin: 55, yMax: 215, recoger: 135, lMin: 80, vidas: 1, ayuda: false, limite: 0,
+              empuje: 260, vmax: 1300, vx0: 430, obstaculos: true }
   };
   var M = MODOS[modo] || MODOS.facil;
 
@@ -459,18 +464,23 @@ function crearSimulacion(modo, semilla) {
 
   var S = {
     modo: modo, M: M, DT: DT, CALLE: CALLE, TECHO: TECHO,
-    p: { x: 110, y: 300, vx: 320, vy: -420, r: RADIO },
-    cuerda: null, anclas: [], globos: [],
+    p: { x: 110, y: 300, vx: M.vx0 || 320, vy: -420, r: RADIO },
+    cuerda: null, anclas: [], globos: [], obstaculos: [],
     metros: 0, nGlobos: 0, vidas: M.vidas,
     presionado: false, enfriar: 0, pasos: 0, ultimaX: 0,
     terminado: false, motivo: "", entradas: [], eventos: []
   };
 
   function nuevaAncla(x) {
+    var previa = S.anclas.length ? S.ultimaX : 0;
     var a = { x: x, y: rango(M.yMin, M.yMax), w: rango(70, 105), tono: rnd() };
     S.anclas.push(a);
     if (rnd() < (modo === "facil" ? 0.8 : 0.6)) {
       S.globos.push({ x: x + rango(-70, 70), y: rango(260, 430), c: rnd() < 0.5 ? 0 : 1, fase: rango(0, 4) });
+    }
+    if (M.obstaculos && x > 1500 && rnd() < 0.6) {
+      var mov = rnd() < 0.5;
+      S.obstaculos.push({ x: (previa + x) / 2 + rango(-25, 25), y: rango(250, 430), amp: mov ? rango(40, 90) : 0, fase: rango(0, 4), vel: rango(1, 2), r: 24 });
     }
     S.ultimaX = x;
   }
@@ -534,7 +544,8 @@ function crearSimulacion(modo, semilla) {
         var vr = p.vx * nx + p.vy * ny;
         if (vr > 0) { p.vx -= vr * nx; p.vy -= vr * ny; }
         var tx = -ny, ty = nx; if (tx < 0) { tx = -tx; ty = -ty; }
-        p.vx += tx * 170 * DT; p.vy += ty * 170 * DT;
+        var emp = M.empuje || 170;
+        p.vx += tx * emp * DT; p.vy += ty * emp * DT;
       }
       if (M.ayuda && p.x > a.x + S.cuerda.L * 0.55 && p.vy < -60) {
         S.cuerda = null; p.vy -= 60; S.enfriar = 0.22; S.eventos.push("soltar");
@@ -544,7 +555,8 @@ function crearSimulacion(modo, semilla) {
       p.vx = Math.max(p.vx, M.ayuda ? 140 : 60);
     }
     var v = raiz(p.vx * p.vx + p.vy * p.vy);
-    if (v > 1050) { p.vx *= 1050 / v; p.vy *= 1050 / v; }
+    var vmax = M.vmax || 1050;
+    if (v > vmax) { p.vx *= vmax / v; p.vy *= vmax / v; }
     if (p.y < TECHO + p.r) { p.y = TECHO + p.r; if (p.vy < 0) p.vy = 0; }
 
     for (var i = S.globos.length - 1; i >= 0; i--) {
@@ -557,6 +569,19 @@ function crearSimulacion(modo, semilla) {
         S.eventos.push({ tipo: "pop", x: gl.x, y: gy, c: gl.c });
       }
     }
+
+    for (var o = 0; o < S.obstaculos.length; o++) {
+      var ob = S.obstaculos[o];
+      ob.fase += DT * ob.vel; if (ob.fase >= 4) ob.fase -= 4;
+      var oy = ob.y + ob.amp * S.bamboleo(ob.fase) / 8;
+      var ox = ob.x - p.x, oyy = oy - p.y, lim = ob.r + p.r * 0.8;
+      if (ox * ox + oyy * oyy < lim * lim) {
+        S.cuerda = null; S.vidas = 0; S.terminado = true; S.motivo = "choque";
+        S.eventos.push({ tipo: "choque", x: ob.x, y: oy }); S.eventos.push("fin");
+        break;
+      }
+    }
+    if (S.terminado) { S.pasos++; return; }
 
     if (p.y > CALLE - p.r) {
       if (M.vidas > 1 && S.vidas > 1) {
@@ -574,7 +599,7 @@ function crearSimulacion(modo, semilla) {
 
     S.metros = Math.max(S.metros, Math.floor((p.x - 110) / 25));
     while (S.ultimaX < p.x + 1600) {
-      var extra = modo === "normal" ? Math.min(150, S.metros * 0.5) : 0;
+      var extra = modo === "normal" ? Math.min(150, S.metros * 0.5) : (modo === "dificil" ? Math.min(120, S.metros * 0.4) : 0);
       nuevaAncla(S.ultimaX + rango(M.gapMin, M.gapMax) + extra);
     }
     var nuevasA = [];
@@ -586,12 +611,18 @@ function crearSimulacion(modo, semilla) {
     var nuevosG = [];
     for (var m = 0; m < S.globos.length; m++) { if (S.globos[m].x > p.x - 400) nuevosG.push(S.globos[m]); }
     S.globos = nuevosG;
+    if (S.obstaculos.length) {
+      var nuevosO = [];
+      for (var q = 0; q < S.obstaculos.length; q++) { if (S.obstaculos[q].x > p.x - 400) nuevosO.push(S.obstaculos[q]); }
+      S.obstaculos = nuevosO;
+    }
 
     S.pasos++;
     if (!S.terminado && M.limite && S.pasos >= M.limite) { S.terminado = true; S.motivo = "tiempo"; S.eventos.push("fin"); }
   };
 
   S.bamboleo = function (fase) { var t = fase < 2 ? fase - 1 : 3 - fase; return 8 * t; };
+  S.obstaculoY = function (ob) { return ob.y + ob.amp * S.bamboleo(ob.fase) / 8; };
   S.puntos = function () { return S.metros + S.nGlobos * 10; };
   S.segundosRestantes = function () { return M.limite ? Math.max(0, Math.ceil((M.limite - S.pasos) * DT)) : null; };
   return S;
@@ -1063,12 +1094,18 @@ const Juego = (function(){
   const cv = $("#juego"), cx = cv.getContext("2d");
   const ALTO = 600, CALLE = 540, MIN_ANCHO = 520;
   const COLORES_GLOBO = ["#d0112b", "#1f4fd1"];
-  const VELOCIDAD = {facil: .85, normal: 1};
+  const VELOCIDAD = {facil: .85, normal: 1, dificil: 1.12};
+  const NOMBRE_MODO = {facil: "Fácil", normal: "Normal", dificil: "Difícil"};
+  const TEMA = {
+    dia:   {cielo:["#9fd0ff","#e8f4ff","#ffffff"], nube:"rgba(255,255,255,.9)", lejos:"#c7dcf3", edif:["#2f5fb8","#3a6fcc"], techo:"#24498f", vent:"rgba(255,240,170,.75)", calle:"#2a3550", borde:"#3d4a6b"},
+    noche: {cielo:["#060a24","#14204d","#2b3a78"], nube:"rgba(160,175,220,.18)", lejos:"#1b2550", edif:["#141d42","#19244f"], techo:"#0c1330", vent:"rgba(255,214,102,.9)", calle:"#0d1226", borde:"#1f2a4d"}
+  };
+  let estrellas = [];
   let W=0, H=0, dpr=1, esc=1, vistaW=0, vistaH=0, offY=0;
   let estado = "menu", modo = "facil", sim = null, semilla = 1, enviado = false;
   let parts = [], camX = 0, acc = 0, tPista = 0, ultimoT = 0, raf = null, nubes = [], lejanos = [];
   let tabRanking = "facil";
-  const records = leer("cumple_records", {facil:0, normal:0});
+  const records = Object.assign({facil:0, normal:0, dificil:0}, leer("cumple_records", {}));
 
   function medir(){
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1080,13 +1117,14 @@ const Juego = (function(){
   window.addEventListener("resize", () => { if (pantalla === "s3") medir(); });
 
   function textoRecords(){
-    $("#recordsTxt").textContent = `🏆 Tu récord · Fácil: ${records.facil} · Normal: ${records.normal}`;
+    $("#recordsTxt").textContent = `🏆 Tu récord · Fácil: ${records.facil} · Normal: ${records.normal} · Difícil: ${records.dificil}`;
   }
 
   function generarFondo(){
     nubes = []; for (let i=0;i<8;i++) nubes.push({x:rand(0,1600), y:rand(-260, 160), s:rand(.6,1.4)});
     lejanos = []; let x = 0;
     while (x < 1600){ const w = rand(50,110); lejanos.push({x, w, h:rand(120,300)}); x += w + rand(0,8); }
+    estrellas = []; for (let i=0;i<90;i++) estrellas.push({x:rand(0,1600), y:rand(-420, 330), r:rand(.6,2), f:rand(0,6)});
   }
 
   function nuevaSemilla(){
@@ -1125,6 +1163,7 @@ const Juego = (function(){
     for (const ev of sim.eventos){
       if (typeof ev === "object"){
         if (ev.tipo === "pop"){ estallido(ev.x, ev.y, COLORES_GLOBO[ev.c], 18); Audio2.sfx("pop"); }
+        else if (ev.tipo === "choque"){ estallido(ev.x, ev.y, "#ff3b3b", 26); estallido(ev.x, ev.y, "#ffd400", 16); if (navigator.vibrate) try{ navigator.vibrate(200); }catch(e){} }
       } else if (ev === "rebote"){
         estallido(sim.p.x, CALLE, "#ffffff", 14); Audio2.sfx("rebote");
         if (navigator.vibrate) try{ navigator.vibrate(60); }catch(e){}
@@ -1163,42 +1202,89 @@ const Juego = (function(){
     cx.fill();
   }
   function dibujar(){
+    const noche = !!(sim && sim.modo === "dificil");
+    const C = noche ? TEMA.noche : TEMA.dia;
+    const tt = performance.now() / 1000;
     cx.setTransform(dpr,0,0,dpr,0,0);
     const cielo = cx.createLinearGradient(0,0,0,H);
-    cielo.addColorStop(0,"#9fd0ff"); cielo.addColorStop(.7,"#e8f4ff"); cielo.addColorStop(1,"#ffffff");
+    cielo.addColorStop(0,C.cielo[0]); cielo.addColorStop(.7,C.cielo[1]); cielo.addColorStop(1,C.cielo[2]);
     cx.fillStyle = cielo; cx.fillRect(0,0,W,H);
     if (!sim) return;
 
     cx.setTransform(dpr*esc,0,0,dpr*esc,0,offY*esc*dpr);
-    cx.fillStyle = "rgba(255,255,255,.9)";
+    if (noche){
+      for (const e of estrellas){
+        cx.globalAlpha = .45 + .55*Math.abs(Math.sin(tt*1.5 + e.f));
+        cx.fillStyle = "#ffffff";
+        cx.fillRect(((e.x - camX*0.05) % 1600 + 1600) % 1600 - 50, e.y, e.r, e.r);
+      }
+      cx.globalAlpha = 1;
+      const lx = vistaW*0.78, ly = -120;
+      const halo = cx.createRadialGradient(lx, ly, 20, lx, ly, 140);
+      halo.addColorStop(0,"rgba(255,250,220,.35)"); halo.addColorStop(1,"rgba(255,250,220,0)");
+      cx.fillStyle = halo; cx.beginPath(); cx.arc(lx, ly, 140, 0, Math.PI*2); cx.fill();
+      cx.fillStyle = "#fff7d6"; cx.beginPath(); cx.arc(lx, ly, 46, 0, Math.PI*2); cx.fill();
+      cx.fillStyle = "rgba(200,190,150,.18)";
+      cx.beginPath(); cx.arc(lx-14, ly-8, 9, 0, Math.PI*2); cx.arc(lx+12, ly+12, 6, 0, Math.PI*2); cx.arc(lx+16, ly-16, 4, 0, Math.PI*2); cx.fill();
+    }
+    cx.fillStyle = C.nube;
     for (const n of nubes){ nube(((n.x - camX*0.1) % 1700 + 1700) % 1700 - 100, n.y, n.s); }
-    cx.fillStyle = "#c7dcf3";
-    for (const b of lejanos){ cx.fillRect(((b.x - camX*0.3) % 1600 + 1600) % 1600 - 120, CALLE - b.h, b.w, b.h); }
+    for (const b of lejanos){
+      const bx = ((b.x - camX*0.3) % 1600 + 1600) % 1600 - 120;
+      cx.fillStyle = C.lejos; cx.fillRect(bx, CALLE - b.h, b.w, b.h);
+      if (noche){
+        cx.fillStyle = "rgba(255,214,102,.35)";
+        for (let yy = CALLE - b.h + 12; yy < CALLE - 10; yy += 20)
+          for (let xx = bx + 7; xx < bx + b.w - 8; xx += 14)
+            if (((Math.floor(b.x)*3 + Math.floor(yy)*7 + Math.floor(xx - bx)*5) % 7) < 2) cx.fillRect(xx, yy, 6, 8);
+      }
+    }
 
     cx.save(); cx.translate(-camX, 0);
 
     for (const a of sim.anclas){
       const x0 = a.x - a.w/2;
-      cx.fillStyle = a.tono < .5 ? "#2f5fb8" : "#3a6fcc";
+      cx.fillStyle = a.tono < .5 ? C.edif[0] : C.edif[1];
       cx.fillRect(x0, a.y, a.w, CALLE - a.y);
-      cx.fillStyle = "#24498f"; cx.fillRect(x0 - 4, a.y - 6, a.w + 8, 8);
-      cx.fillStyle = "rgba(255,240,170,.75)";
+      cx.fillStyle = C.techo; cx.fillRect(x0 - 4, a.y - 6, a.w + 8, 8);
+      cx.fillStyle = C.vent;
       for (let yy = a.y + 16; yy < CALLE - 14; yy += 22){
         for (let xx = x0 + 9; xx < x0 + a.w - 14; xx += 18){
           if (((Math.floor(xx)*7 + Math.floor(yy)*13 + Math.floor(a.x)) % 5) < 3) cx.fillRect(xx, yy, 9, 11);
         }
       }
-      cx.strokeStyle = "#24498f"; cx.lineWidth = 3;
+      cx.strokeStyle = C.techo; cx.lineWidth = 3;
       cx.beginPath(); cx.moveTo(a.x, a.y - 6); cx.lineTo(a.x, a.y - 22); cx.stroke();
       cx.fillStyle = "#ffffff"; cx.strokeStyle = "#141a2e"; cx.lineWidth = 2.5;
       cx.beginPath(); cx.arc(a.x, a.y - 24, 6, 0, Math.PI*2); cx.fill(); cx.stroke();
     }
 
-    cx.fillStyle = "#2a3550"; cx.fillRect(camX - 50, CALLE, vistaW + 100, ALTO - CALLE + offY + 400);
+    cx.fillStyle = C.calle; cx.fillRect(camX - 50, CALLE, vistaW + 100, ALTO - CALLE + offY + 400);
     cx.fillStyle = "#f2c94c";
     const d0 = Math.floor((camX - 50)/80)*80;
     for (let x = d0; x < camX + vistaW + 80; x += 80) cx.fillRect(x, CALLE + 28, 40, 6);
-    cx.fillStyle = "#3d4a6b"; cx.fillRect(camX - 50, CALLE, vistaW + 100, 8);
+    cx.fillStyle = C.borde; cx.fillRect(camX - 50, CALLE, vistaW + 100, 8);
+
+    for (const ob of sim.obstaculos){
+      const oy = sim.obstaculoY(ob);
+      cx.save(); cx.translate(ob.x, oy);
+      cx.strokeStyle = "#0a0d1c"; cx.lineWidth = 3;
+      cx.beginPath(); cx.moveTo(-34, -14); cx.lineTo(34, -14); cx.stroke();
+      const giro = Math.abs(Math.sin(tt*30)) * 16 + 4;
+      cx.fillStyle = "rgba(200,210,240,.55)";
+      cx.fillRect(-34 - giro/2, -18, giro, 3); cx.fillRect(34 - giro/2, -18, giro, 3);
+      cx.shadowColor = "rgba(255,60,60,.9)"; cx.shadowBlur = 18;
+      cx.fillStyle = "#3a4166"; cx.strokeStyle = "#ff4d4d"; cx.lineWidth = 3.5;
+      cx.beginPath(); cx.arc(0, 0, ob.r, 0, Math.PI*2); cx.fill(); cx.stroke();
+      cx.shadowBlur = 0;
+      const brillo = .55 + .45*Math.abs(Math.sin(tt*4 + ob.x));
+      const ojo = cx.createRadialGradient(0, 2, 2, 0, 2, 22);
+      ojo.addColorStop(0, `rgba(255,70,70,${brillo})`); ojo.addColorStop(1, "rgba(255,0,0,0)");
+      cx.fillStyle = ojo; cx.beginPath(); cx.arc(0, 2, 22, 0, Math.PI*2); cx.fill();
+      cx.fillStyle = "#ff4040"; cx.beginPath(); cx.arc(0, 2, 7, 0, Math.PI*2); cx.fill();
+      cx.fillStyle = "#fff"; cx.beginPath(); cx.arc(-2, 0, 2, 0, Math.PI*2); cx.fill();
+      cx.restore();
+    }
 
     for (const g of sim.globos){
       const gy = g.y + sim.bamboleo(g.fase);
@@ -1274,10 +1360,10 @@ const Juego = (function(){
     const nuevo = puntos > (records[modo] || 0);
     if (nuevo){ records[modo] = puntos; guardar("cumple_records", records); }
     setTimeout(() => {
-      $("#finTitulo").textContent = sim.motivo === "tiempo" ? "¡TIEMPO! ¡GENIAL!" : (modo === "facil" ? "¡MUY BIEN, HÉROE!" : "¡UY, TE CAÍSTE!");
+      $("#finTitulo").textContent = sim.motivo === "tiempo" ? "¡TIEMPO! ¡GENIAL!" : sim.motivo === "choque" ? "¡CHOCASTE CON UN DRON!" : (modo === "facil" ? "¡MUY BIEN, HÉROE!" : "¡UY, TE CAÍSTE!");
       $("#finPuntos").textContent = puntos + " pts";
       $("#finNuevo").innerHTML = nuevo && puntos > 0 ? '<span class="nuevo-record">🏆 ¡TU NUEVO RÉCORD!</span>' : "";
-      $("#finRecord").textContent = `${sim.metros} m + ${sim.nGlobos} 🎈 × 10 · Tu récord ${modo === "facil" ? "Fácil" : "Normal"}: ${records[modo]}`;
+      $("#finRecord").textContent = `${sim.metros} m + ${sim.nGlobos} 🎈 × 10 · Tu récord ${NOMBRE_MODO[modo]}: ${records[modo]}`;
       prepararFormulario(puntos);
       $("#finJuego").classList.remove("oculto");
       $("#hud").style.display = "none";
